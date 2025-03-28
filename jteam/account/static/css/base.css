@@ -1,9 +1,9 @@
 @import url(//fonts.googleapis.com/css?family=Muli);
 
 body {
-    margin:0;
-    padding:0;
-    font-family:helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+    font-family: helvetica, sans-serif;
 }
 
 p {
@@ -11,551 +11,722 @@ p {
 }
 
 a {
-    color:#12c064;
-    text-decoration:none;
+    color: #12c064;
+    text-decoration: none;
 }
 
 a:hover {
-    color:#00a74f;
+    color: #00a74f;
 }
 
-h1, h2, h3, h4, h5 , h6 { font-family: 'Muli', sans-serif; font-weight:normal; }
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Muli', sans-serif;
+    font-weight: normal;
+}
 
 h1 {
-    border-bottom:1px solid #bbb;
-    padding:0 0 10px 0;
-    margin:10px 0 20px 0;
+    border-bottom: 1px solid #bbb;
+    padding: 0 0 10px 0;
+    margin: 10px 0 20px 0;
 }
 
 h2 {
-    margin:30px 0 20px;
+    margin: 30px 0 20px;
 }
 
 ol {
-    line-height:1.5;
+    line-height: 1.5;
 }
 
 #header {
-    padding:10px 100px;
-    font-size:14px;
-    background:#12c064;
-    color:#fff;
-    border-bottom:4px solid #1cdf78;
-    overflow:auto;
+    padding: 10px 100px;
+    font-size: 14px;
+    background: #12c064;
+    color: #fff;
+    border-bottom: 4px solid #1cdf78;
+    overflow: auto;
 }
 
 #header .logo {
     font-family: 'Mulish', sans-serif;
-    float:left;
-    color:#f3f7cc;
-    font-size:20px;
-    margin-right:10%;
+    float: left;
+    color: #f3f7cc;
+    font-size: 20px;
+    margin-right: 10%;
 }
 
 #header ul.menu {
-    list-style:none;
-    float:left;
-    margin:0;
-    padding:0;
-}
-#header ul.menu li {
-    float:left;
-    padding:4px 10px;
+    list-style: none;
+    float: left;
+    margin: 0;
+    padding: 0;
 }
 
-#header ul.menu li.selected a, #header ul.menu li.selected a:hover {
-    color:#1b6d32;
-    font-weight:bold;
+#header ul.menu li {
+    float: left;
+    padding: 4px 10px;
+}
+
+#header ul.menu li.selected a,
+#header ul.menu li.selected a:hover {
+    color: #1b6d32;
+    font-weight: bold;
 }
 
 #header a {
-    color:#f3f7cc;
+    color: #f3f7cc;
 }
+
 #header a:hover {
-    color:#fff;
+    color: #fff;
 }
 
 #header .user {
-    float:right;
-    padding-top:4px;
+    float: right;
+    padding-top: 4px;
 }
 
 #content {
-    padding:30px 100px;
+    padding: 30px 100px;
 }
 
 /* forms */
 form {
-    overflow:auto;
+    overflow: auto;
 }
 
 form p {
-    width:100%;
-    overflow:auto;
+    width: 100%;
+    overflow: auto;
 }
 
 label {
-    float:left;
-    clear:both;
-    color:#333;
-    margin-bottom:4px;
+    float: left;
+    clear: both;
+    color: #333;
+    margin-bottom: 4px;
 }
-input, textarea {
-    clear:both;
-    float:left;
-    margin:0 0 10px;
-    background:#efefef;
-    border:0;
-    padding:6px 10px;
-    font-size:14px;
+
+input,
+textarea {
+    clear: both;
+    float: left;
+    margin: 0 0 10px;
+    background: #efefef;
+    border: 0;
+    padding: 6px 10px;
+    font-size: 14px;
 }
-input[type=submit], a.button {
-    font-weight:bold;
-    background:#12c064;
-    color:#fff;
-    padding:10px 20px;
-    font-size:14px;
-    text-transform:uppercase;
+
+input[type=submit],
+a.button {
+    font-weight: bold;
+    background: #12c064;
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 14px;
+    text-transform: uppercase;
 }
+
 .errorlist {
-    color:#cc0033;
-    float:left;
-    clear:both;
-    padding-left:10px;
+    color: #cc0033;
+    float: left;
+    clear: both;
+    padding-left: 10px;
 }
+
 .helptext {
-    margin:0 0 20px 0;
-    color:#aaa;
-    clear:both;
-    float:left;
-    font-size:13px;
+    margin: 0 0 20px 0;
+    color: #aaa;
+    clear: both;
+    float: left;
+    font-size: 13px;
 }
+
 /* messages */
 ul.messages {
-    margin:10px 100px;
-    padding:0;
+    margin: 10px 100px;
+    padding: 0;
     list-style-type:
-    none;
+        none;
 }
+
 ul.messages li.success,
 ul.messages li.warning,
 ul.messages li.error,
 ul.messages li.info {
-    margin:0;
-    padding:14px 20px;
-    list-style:none;
-    color:#fff;
+    margin: 0;
+    padding: 14px 20px;
+    list-style: none;
+    color: #fff;
 }
 
-ul.messages li.success { background:#81ce81; }
-ul.messages li.success a { color:#0ac33e; }
+ul.messages li.success {
+    background: #81ce81;
+}
 
-ul.messages li.error { background:#a30029; color:#e9828e; }
-ul.messages li.error a { color:#e9828e; }
+ul.messages li.success a {
+    color: #0ac33e;
+}
 
-ul.messages li.info { background:#faffae; color:#696b4e; }
-ul.messages li.info a { color:#1586de; }
+ul.messages li.error {
+    background: #a30029;
+    color: #e9828e;
+}
 
-ul.messages li.warning { background:#de9404; }
-ul.messages li.warning a { color:#f49000; }
+ul.messages li.error a {
+    color: #e9828e;
+}
+
+ul.messages li.info {
+    background: #faffae;
+    color: #696b4e;
+}
+
+ul.messages li.info a {
+    color: #1586de;
+}
+
+ul.messages li.warning {
+    background: #de9404;
+}
+
+ul.messages li.warning a {
+    color: #f49000;
+}
 
 ul.messages li a.close {
-    margin:0;
-    float:right;
-    opacity:1;
-    border:0;
-    box-shadow:none;
-    text-shadow:none;
+    margin: 0;
+    float: right;
+    opacity: 1;
+    border: 0;
+    box-shadow: none;
+    text-shadow: none;
 }
 
 .login-form {
-    float:left;
+    float: left;
 }
 
 /* social-auth */
 .social {
-    float:right;
+    float: right;
 }
+
 .social li {
-    list-style:none;
-    padding:10px 20px;
-    margin:0 0 10px 0;
+    list-style: none;
+    padding: 10px 20px;
+    margin: 0 0 10px 0;
 }
+
 .social li a {
-    width:100%;
-    height:100%;
-    display:block;
-    color:#fff;
+    width: 100%;
+    height: 100%;
+    display: block;
+    color: #fff;
 }
-.social li.facebook { background:#3b5399; }
-.social li.twitter { background:#00cffa; }
-.social li.google { background:#de1710; }
+
+.social li.facebook {
+    background: #3b5399;
+}
+
+.social li.twitter {
+    background: #00cffa;
+}
+
+.social li.google {
+    background: #de1710;
+}
 
 
 /* images */
 
-.image-preview, .image-detail {
-    max-width:300px;
-    float:left;
-    margin:0 20px 20px 0;
+.image-preview,
+.image-detail {
+    max-width: 300px;
+    float: left;
+    margin: 0 20px 20px 0;
 }
-.image-detail { margin-top:20px; }
-.image-info div {
-    padding:20px 0;
-    overflow:auto;
-}
-.count {
-    color:#aaa;
-    border:3px solid #bbb;
-    border-radius:26px;
-    padding:10px 20px;
-    margin:20px 10px 0;
-}
-a.like, a.follow { float:right; margin-top:-8px; }
 
-#image-list { overflow:hidden; }
+.image-detail {
+    margin-top: 20px;
+}
+
+.image-info div {
+    padding: 20px 0;
+    overflow: auto;
+}
+
+.count {
+    color: #aaa;
+    border: 3px solid #bbb;
+    border-radius: 26px;
+    padding: 10px 20px;
+    margin: 20px 10px 0;
+}
+
+a.like,
+a.follow {
+    float: right;
+    margin-top: -8px;
+}
+
+#image-list {
+    overflow: hidden;
+}
+
 #image-list .image {
-    float:left;
-    width:220px;
-    height:300px;
-    margin:0 10px 10px 10px;
-    border-top:8px solid #12c064;
-    background:#eee;
+    float: left;
+    width: 220px;
+    height: 300px;
+    margin: 0 10px 10px 10px;
+    border-top: 8px solid #12c064;
+    background: #eee;
 }
-#image-list img { width:220px; height:220px; }
-#image-list .info { padding:10px; }
-#image-list .info a { color:#333; }
+
+#image-list img {
+    width: 220px;
+    height: 220px;
+}
+
+#image-list .info {
+    padding: 10px;
+}
+
+#image-list .info a {
+    color: #333;
+}
+
 .image-likes div {
-    float:left;
-    width:auto;
-    padding:10px;
-    text-align:center;
+    float: left;
+    width: auto;
+    padding: 10px;
+    text-align: center;
 }
+
 .image-likes img {
-    width:120px;
-    height:120px;
-    border-radius:50%;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
 }
 
 /* users */
 #people-list img {
-    width:80px;
-    height:80px;
-    border-radius:50%;
-    margin-bottom:20px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 20px;
     margin-right: 10px;
 }
+
 #people-list .user {
-    width:200px;
+    width: 200px;
     /*float:left; */
     display: flex;
     align-items: center;
 
-    overflow:auto;
-    padding:10px;
+    overflow: auto;
+    padding: 10px;
 }
-#people-list .info { text-align:center; }
+
+#people-list .info {
+    text-align: center;
+}
+
 img.user-detail {
-    border-radius:50%;
-    float:left;
+    border-radius: 50%;
+    float: left;
 }
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-info span {
+    margin: 0;
+}
+
+.logout-form {
+    margin: 0;
+}
+
+.logout-form .btn {
+    padding: 5px 15px;
+    font-size: 0.9em;
+}
+
 .profile-info {
-    float:left;
-    overflow:auto;
-    margin-right:20px;
+    float: left;
+    overflow: auto;
+    margin-right: 20px;
 }
-.image-container { margin-top:40px; }
+
+.image-container {
+    margin-top: 40px;
+}
 
 /* actions */
 .action {
-    clear:both;
-    overflow:auto;
+    clear: both;
+    overflow: auto;
 }
+
 .action .images {
-    float:left;
-    margin:0 10px 10px 0;
+    float: left;
+    margin: 0 10px 10px 0;
 }
+
 .action .date {
-    font-style:italic;
-    color:#ccc;
+    font-style: italic;
+    color: #ccc;
 }
+
 .form-control.custom-focus:focus {
-    border-color: #6c757d; /* Цвет рамки */
-    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25); /* Цвет тени */
+    border-color: #6c757d;
+    /* Цвет рамки */
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+    /* Цвет тени */
 
 }
+
 .form-control.form-control-width {
-    max-width: 300px;  /* Измените это значение в соответствии с вашими предпочтениями */
+    max-width: 300px;
+    /* Измените это значение в соответствии с вашими предпочтениями */
     box-sizing: content-box;
 }
+
 .form-control {
     box-sizing: content-box;
 }
 
 .createGame {
-   margin-bottom: 0px;
-   margin-top: 20px;
-   margin-left: 20px;
-   margin-right: 20px;
-}
-.createGameButton {
-   margin-bottom: 60px;
-   margin-top: 20px;
-   margin-left: 20px;
-   margin-right: 20px;
+    margin-bottom: 0px;
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
-#game-list { overflow:hidden; }
-#game-list .game {
-    float:left;
-    width:220px;
-    height:300px;
-    margin:0 10px 10px 10px;
-    border-top:8px solid #12c064;
-    background:#eee;
+.createGameButton {
+    margin-bottom: 60px;
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
 }
-#game-list img { width:220px; height:220px; }
-#game-list .info { padding:10px; }
-#game-list .info a { color:#333; }
+
+#game-list {
+    overflow: hidden;
+}
+
+#game-list .game {
+    float: left;
+    width: 220px;
+    height: 300px;
+    margin: 0 10px 10px 10px;
+    border-top: 8px solid #12c064;
+    background: #eee;
+}
+
+#game-list img {
+    width: 220px;
+    height: 220px;
+}
+
+#game-list .info {
+    padding: 10px;
+}
+
+#game-list .info a {
+    color: #333;
+}
+
 .game-likes div {
-    float:left;
-    width:auto;
-    padding:10px;
-    text-align:center;
+    float: left;
+    width: auto;
+    padding: 10px;
+    text-align: center;
 }
 
 
 .createGame {
-   margin-bottom: 0px;
-   margin-top: 20px;
-   margin-left: 20px;
-   margin-right: 20px;
+    margin-bottom: 0px;
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
 }
+
 .createGameButton {
-   margin-bottom: 60px;
-   margin-top: 20px;
-   margin-left: 20px;
-   margin-right: 20px;
+    margin-bottom: 60px;
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
 /* подчёркнутый тексте */
 .underline {
     text-decoration: underline;
 }
+
 /* Дополнительные стили для формы */
 .form-inline .form-group {
-    margin-bottom: 0; /* Убираем отступ снизу для формы в строке */
+    margin-bottom: 0;
+    /* Убираем отступ снизу для формы в строке */
 }
+
 /* Дополнительные стили для кнопки */
 .btn-custom {
-    background-color: #007bff; /* Цвет фона */
-    border-color: #007bff; /* Цвет границы */
-    color: #fff; /* Цвет текста */
-    border-radius: 5px; /* Скругление углов */
-    padding: 8px 16px; /* Внутренние отступы */
-    font-size: 16px; /* Размер шрифта */
+    background-color: #007bff;
+    /* Цвет фона */
+    border-color: #007bff;
+    /* Цвет границы */
+    color: #fff;
+    /* Цвет текста */
+    border-radius: 5px;
+    /* Скругление углов */
+    padding: 8px 16px;
+    /* Внутренние отступы */
+    font-size: 16px;
+    /* Размер шрифта */
 }
 
 .btn-custom:hover {
-    background-color: #0056b3; /* Цвет фона при наведении */
-    border-color: #0056b3; /* Цвет границы при наведении */
-    color: #fff; /* Цвет текста при наведении */
-}
-/* location sidebar */
-#sidebar {
-    width:220px;
-    padding:30px 20px 0 0;
-    float:left;
+    background-color: #0056b3;
+    /* Цвет фона при наведении */
+    border-color: #0056b3;
+    /* Цвет границы при наведении */
+    color: #fff;
+    /* Цвет текста при наведении */
 }
 
-#sidebar ul{
-    margin:0;
-    padding:0;
+/* location sidebar */
+#sidebar {
+    width: 220px;
+    padding: 30px 20px 0 0;
+    float: left;
+}
+
+#sidebar ul {
+    margin: 0;
+    padding: 0;
 }
 
 #sidebar ul li {
-    margin:0;
-    list-style:none;
-    padding:10px 14px;
+    margin: 0;
+    list-style: none;
+    padding: 10px 14px;
 }
 
 #sidebar ul li a {
-    display:block;
+    display: block;
 }
 
 #sidebar ul li.selected {
-    background:#5993bb;
-    border-radius:4px;
+    background: #5993bb;
+    border-radius: 4px;
 }
 
 #sidebar ul li.selected a {
-    color:#fff;
+    color: #fff;
 }
+
 /* location main */
 #main {
-    float:left;
+    float: left;
     width: 96%;
-    margin-right:-220px;
-    overflow:hidden;
+    margin-right: -220px;
+    overflow: hidden;
 }
 
 .product-list .item {
-    width:25%;
-    padding:10px 20px 10px 0;
-    float:left;
-    text-align:center;
-    line-height:1.2;
+    width: 25%;
+    padding: 10px 20px 10px 0;
+    float: left;
+    text-align: center;
+    line-height: 1.2;
 }
 
 .product-list .item img {
-    width:100%;
-    margin-bottom:8px;
+    width: 100%;
+    margin-bottom: 8px;
 }
 
 .product-detail {
-    text-align:justify;
+    text-align: justify;
 }
 
 .product-detail .price {
-    color:#333;
-    font-size:28px;
-    font-weight:bold;
+    color: #333;
+    font-size: 28px;
+    font-weight: bold;
 }
 
 .product-detail img {
-    width:40%;
-    float:left;
-    padding:0 20px 20px 0;
+    width: 40%;
+    float: left;
+    padding: 0 20px 20px 0;
 }
 
 .product-detail h1 {
-    margin-bottom:0;
+    margin-bottom: 0;
 }
 
 .product-detail h2 {
-    margin-top:10px;
+    margin-top: 10px;
 }
 
 /* cart */
 
-a.button, input[type="submit"] {
-    color:#fff;
-    background:#5993bb;
-    border-radius:4px;
-    padding:10px 20px;
-    font-size:14px;
-    border:0;
+a.button,
+input[type="submit"] {
+    color: #fff;
+    background: #12c064;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 14px;
+    border: 0;
+    text-transform: uppercase;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    position: relative;
+    top: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+a.button:hover,
+input[type="submit"]:hover {
+    background: #0fa558;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+a.button:active,
+input[type="submit"]:active {
+    background: #0c8043;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transform: translateY(1px);
 }
 
 a.button.light {
-    color:#666;
-    background:#ededed;
+    color: #666;
+    background: #ededed;
 }
 
 .text-left {
-    text-align:left;
+    text-align: left;
 }
 
 .text-right {
-    text-align:right;
+    text-align: right;
 }
 
 table {
-    width:100%;
-    border-spacing:0;
+    width: 100%;
+    border-spacing: 0;
     border-collapse: collapse;
 }
 
-table th, table td {
-    text-align:left;
-    font-size:14px;
-    padding:10px;
-    margin:0;
+table th,
+table td {
+    text-align: left;
+    font-size: 14px;
+    padding: 10px;
+    margin: 0;
 }
 
 tbody tr:nth-child(odd) {
-    background:#efefef;
+    background: #efefef;
 }
 
 tbody tr.subtotal {
-    background:#ccc;
+    background: #ccc;
 }
 
-thead th, tbody tr.total {
-    background:#5993bb;
-    color:#fff;
-    font-weight:bold;
+thead th,
+tbody tr.total {
+    background: #5993bb;
+    color: #fff;
+    font-weight: bold;
 }
 
 table.cart {
-    margin-bottom:40px;
+    margin-bottom: 40px;
 }
 
 table.cart img {
-    width:180px;
+    width: 180px;
 }
 
 tbody td.num {
-    text-align:right;
+    text-align: right;
 }
 
 td input[type="submit"] {
-    font-size:12px;
-    padding:4px 10px;
+    font-size: 12px;
+    padding: 4px 10px;
 }
 
-form p label, form p input {
-    float:left;
-    clear:both;
+form p label,
+form p input {
+    float: left;
+    clear: both;
 }
 
 form p label {
-    font-size:14px;
-    padding-bottom:4px;
+    font-size: 14px;
+    padding-bottom: 4px;
 }
 
 form p input {
-    width:300px;
-    font-size:13px;
-    margin-bottom:10px;
-    padding:10px 12px;
-    border:0;
-    background:#efefef;
-    color:#666;
-    border-radius:4px;
+    width: 300px;
+    font-size: 13px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border: 0;
+    background: #efefef;
+    color: #666;
+    border-radius: 4px;
 }
 
 /* order */
 .order-form {
-    float:left;
+    float: left;
 }
 
 .order-info {
-    float:right;
-    width:300px;
-    background:#efefef;
-    padding:10px 20px;
-    color:#333;
-    border-bottom:4px solid #5993bb;
+    float: right;
+    width: 300px;
+    background: #efefef;
+    padding: 10px 20px;
+    color: #333;
+    border-bottom: 4px solid #5993bb;
 }
 
 .order-info h3 {
-    color:#5993bb;
+    color: #5993bb;
 }
 
 .order-info ul li {
-    margin:0;
-    padding:0;
-    font-size:14px;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
 }
 
 .order-info p {
-    font-weight:bold;
-    float:right;
+    font-weight: bold;
+    float: right;
 }
 
 .order-info span {
-    float:right;
+    float: right;
 }
 
 /* cart в правом верхнем углу*/
@@ -573,50 +744,50 @@ form p input {
 }*/
 
 .recommendations {
-    clear:both;
+    clear: both;
 }
 
 .recommendations div {
-    float:left;
+    float: left;
 }
 
 .recommendations img {
-    width:200px
+    width: 200px
 }
 
 .recommendations p {
-    clear:both;
+    clear: both;
 }
 
 .recommendations.cart {
-    width:60%;
-    float:left;
-    overflow:auto;
+    width: 60%;
+    float: left;
+    overflow: auto;
 }
 
 .recommendations.cart h3 {
-    margin-top:0;
+    margin-top: 0;
 }
 
 .recommendations.cart .item {
-    margin-right:10px;
+    margin-right: 10px;
 }
 
 .recommendations.cart img {
-    width:120px;
+    width: 120px;
 }
 
 .languages {
-   float:right;
-   padding-top:4px;
-   font-size:14px;
-   margin-left: 40px;
+    float: right;
+    padding-top: 4px;
+    font-size: 14px;
+    margin-left: 40px;
 }
 
 .languages ul {
-    list-style:none;
-    margin:0;
-    padding:0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
 
     text-align: right;
 }
@@ -626,6 +797,175 @@ form p input {
 }
 
 .languages p {
-    float:left;
-    margin:0;
+    float: left;
+    margin: 0;
+}
+
+/* Стили для страницы детальной информации об игре */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.game-actions {
+    margin-left: 20px;
+}
+
+.game-stats {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    /* Увеличиваем расстояние между элементами */
+    margin-bottom: 20px;
+    /* Добавляем отступ снизу */
+}
+
+.game-stats p {
+    margin: 0;
+    /* Убираем стандартные отступы */
+    display: flex;
+    align-items: center;
+}
+
+.game-stats .count {
+    margin-left: 10px;
+    font-weight: bold;
+    border: none;
+    /* Убираем рамку */
+    padding: 5px 10px;
+    /* Уменьшаем отступы */
+}
+
+.game-stats-container {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 20px 0;
+    display: inline-block;
+    /* Блок займет только нужное пространство */
+}
+
+.like.button {
+    margin-left: 20px;
+    /* Отступ слева от статистики */
+    background-color: #12c064;
+    /* Цвет как у других кнопок */
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.like.button:hover {
+    background-color: #0fa558;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.game-status-message {
+    color: #dc3545;
+    font-weight: bold;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f8d7da;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Стили для статусов игр */
+.game-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.status-open {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-started {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.status-finished {
+    background-color: #dc3545;
+    color: white;
+}
+
+.filter-container {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+}
+
+.filter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filter-row .form-group {
+    flex: 1 1 50px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+}
+
+.filter-row .form-group label {
+    margin-bottom: 2px;
+    color: #333;
+    min-height: 24px;
+    /* Фиксируем минимальную высоту меток */
+}
+
+.filter-row .form-group input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.filter-row .form-group select {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.filter-button {
+    padding: 8px 16px;
+    margin-bottom: 5px;
+    /* Выравниваем кнопку с полями */
+}
+
+/* Новые стили для бокового расположения фильтров и списка игр */
+.game-list-wrapper {
+    display: flex;
+    gap: 20px;
+}
+
+.filter-container {
+    width: 200px;
+}
+
+#game-list {
+    flex: 1;
 }

@@ -9,10 +9,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from actions.utils import create_action
+from django.db.models import Q
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank, TrigramSimilarity
+from django.db.models.functions import Greatest
+import logging
 
-from .forms import GameCreateForm
+from .forms import GameCreateForm, GameFilterForm
 from .models import Game
 
+logger = logging.getLogger(__name__)
 
 def validate_date(value):
     if value < timezone.now().date():
@@ -33,6 +38,11 @@ def game_create(request):
             new_game = form.save(commit=False)
             new_game.user = request.user
             
+            logger.info("Форма валидна, начинаем создание игры.")
+            logger.info("Полученные координаты: lat=%s, lon=%s",
+                        form.cleaned_data.get('latitude'),
+                        form.cleaned_data.get('longitude'))
+            
             try:
                 # Округляем время до минут
                 start_time = new_game.start_time.replace(second=0, microsecond=0)
@@ -41,18 +51,30 @@ def game_create(request):
                 # Проверяем, что время в будущем
                 if start_time <= timezone.localtime(timezone.now()):
                     messages.error(request, "Время начала игры должно быть в будущем")
+                    logger.warning("Попытка создания игры в прошлом.")
                     return render(request, "games/game/create.html", {"section": "games", "form": form})
                 
+                # Сохраняем координаты без дополнительной проверки, так как фронтенд их гарантирует
+                new_game.latitude = form.cleaned_data.get('latitude')
+                new_game.longitude = form.cleaned_data.get('longitude')
+                
                 new_game.save()
+                
+                logger.info("Игра успешно создана: id=%s, координаты: lat=%s, lon=%s",
+                            new_game.id, new_game.latitude, new_game.longitude)
+                
                 create_action(request.user, "создал(а) игру", new_game)
                 messages.success(request, "Игра успешно создана")
                 return redirect(new_game.get_absolute_url())
             except ValidationError as e:
                 messages.error(request, e.message)
-                return render(request, "games/game/create.html", {"section": "games", "form": form})
+                logger.error("Ошибка валидации при создании игры: %s", e.message)
+                return render(request, "games/game/create.html", {"section": "games", "form": form, "YANDEX_MAPS_API_KEY": settings.YANDEX_MAPS_API_KEY})
+        else:
+            logger.warning("Форма невалидна: ошибки - %s", form.errors)
     else:
         form = GameCreateForm()
-    return render(request, "games/game/create.html", {"section": "games", "form": form})
+    return render(request, "games/game/create.html", {"section": "games", "form": form, "YANDEX_MAPS_API_KEY": settings.YANDEX_MAPS_API_KEY})
 
 
 def game_detail(request, id, slug):
@@ -66,36 +88,69 @@ def game_detail(request, id, slug):
     return render(
         request,
         "games/game/detail.html",
-        {"section": "games", "game": game, "total_views": total_views},
+        {"section": "games", "game": game, "total_views": total_views, "YANDEX_MAPS_API_KEY": settings.YANDEX_MAPS_API_KEY},
     )
 
 
 @login_required
 def game_list(request):
-    """Выводит постраничный список игр"""
+    """Выводит постраничный список игр с фильтрацией"""
     games = Game.objects.all()
+    form = GameFilterForm(request.GET)
+    
+    if form.is_valid():
+        sport = form.cleaned_data.get('sport')
+        search = form.cleaned_data.get('search')
+        
+        if sport:
+            games = games.filter(sport=sport)
+            
+        if search:
+            games = games.annotate(
+                similarity_username=TrigramSimilarity('user__username', search),
+                similarity_first_name=TrigramSimilarity('user__first_name', search),
+                similarity_last_name=TrigramSimilarity('user__last_name', search)
+            ).annotate(
+                similarity=Greatest(
+                    'similarity_username',
+                    'similarity_first_name',
+                    'similarity_last_name'
+                )
+            ).filter(similarity__gt=0.1).order_by('-similarity')
+
+    # Пагинация
     paginator = Paginator(games, 12)
     page = request.GET.get("page")
     games_only = request.GET.get("games_only")
+    
     try:
         games = paginator.page(page)
     except PageNotAnInteger:
-        # Если page_number не целое число, то
-        # выдать первую страницу
+        # Если page_number не целое число, то выдать первую страницу
         games = paginator.page(1)
     except EmptyPage:
         if games_only:
-            # Если AJAX-запрос и страница вне диапазона,
-            # то вернуть пустую страницу
+            # Если AJAX-запрос и страница вне диапазона, то вернуть пустую страницу
             return HttpResponse("")
-        # Если страница вне диапазона,
-        # то вернуть последнюю страницу результатов
+        # Если страница вне диапазона, то вернуть последнюю страницу результатов
         games = paginator.page(paginator.num_pages)
+    
     if games_only:
         return render(
-            request, "games/game/list_games.html", {"section": "games", "games": games}
+            request,
+            "games/game/list_games.html",
+            {"section": "games", "games": games}
         )
-    return render(request, "games/game/list.html", {"section": "games", "games": games})
+        
+    return render(
+        request,
+        "games/game/list.html",
+        {
+            "section": "games",
+            "games": games,
+            "filter_form": form
+        }
+    )
 
 
 # Не дает пользователям, не вошедшим в систему, обращаться к этому представлению.
@@ -142,7 +197,6 @@ r = redis.Redis(
 @login_required
 def game_ranking(request):
     # получить словарь рейтинга игр
-    # Для получения элементов сортированного множества game_ranking исползьуеться zrange()
     game_ranking = r.zrange("game_ranking", 0, -1, desc=True)[:10]
     game_ranking_ids = [int(id) for id in game_ranking]
 
@@ -154,3 +208,18 @@ def game_ranking(request):
         "games/game/ranking.html",
         {"section": "games", "most_viewed": most_viewed},
     )
+
+
+@login_required
+@require_POST
+def game_delete(request, id):
+    """Представление для удаления игры"""
+    game = get_object_or_404(Game, id=id)
+    # Проверяем, является ли текущий пользователь создателем игры
+    if game.user == request.user:
+        game.delete()
+        messages.success(request, "Игра успешно удалена")
+        return redirect('games:list')
+    else:
+        messages.error(request, "У вас нет прав для удаления этой игры")
+        return redirect(game.get_absolute_url())

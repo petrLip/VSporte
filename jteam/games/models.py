@@ -49,6 +49,8 @@ class Game(models.Model):
     )
     sport = models.CharField(max_length=255, choices=SPORTS)
     place = models.CharField(max_length=255)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     start_time = models.DateTimeField(
         default=timezone.now,
         validators=[validate_future_datetime]

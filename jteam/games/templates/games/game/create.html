@@ -1,18 +1,29 @@
 {% extends "base.html" %}
+{% load static %}
 {% load crispy_forms_tags %}
+{% block title %}Создать игру{% endblock %}
 
-{% block title %} Создать игру {% endblock %}
+{% block extra_head %}
+    <script src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_MAPS_API_KEY }}&lang=ru_RU"></script>
+{% endblock %}
 
 {% block content %}
-  <h1> Создать игру </h1>
+    <h1>Создать игру</h1>
     <p>* Поля со звёздочкой являются обязательными</p>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
         <div class="createGame">
-            {% csrf_token %}
             {{ form|crispy }}
         </div>
         <div class="createGameButton">
             <input class="btn btn-primary" type="submit" value="Создать игру">
         </div>
     </form>
+    <div id="map" style="width: 600px; height: 400px; margin-top: 20px;"></div>
+    
+{% endblock %}
+
+{% block extra_scripts %}
+    <!-- Подключаем наш модульный скрипт с картой -->
+    <script type="module" src="{% static 'js/yandex_map.js' %}"></script>
 {% endblock %}

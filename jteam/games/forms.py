@@ -32,11 +32,17 @@ class GameCreateForm(forms.ModelForm):
         )
     )
 
+    # Добавляем скрытые поля для координат
+    latitude = forms.DecimalField(widget=forms.HiddenInput(), required=False)
+    longitude = forms.DecimalField(widget=forms.HiddenInput(), required=False)
+
     class Meta:
         model = Game
         fields = [
             "sport",
             "place",
+            "latitude",
+            "longitude",
             "start_time",
             "duration",
             "max_players",
@@ -126,8 +132,32 @@ class GameCreateForm(forms.ModelForm):
                 hours, minutes = map(int, duration.split(':'))
                 if hours < 0 or minutes < 0 or minutes >= 60:
                     raise ValidationError("Неверный формат продолжительности")
-                # Преобразуем в timedelta
-                return timedelta(hours=hours, minutes=minutes)
+
+                total_duration = timedelta(hours=hours, minutes=minutes)
+
+                # Проверка на максимальную продолжительность (20 часов)
+                if total_duration > timedelta(hours=20):
+                    raise ValidationError("Продолжительность игры не может превышать 20 часов.")
+
+                return total_duration
             except ValueError:
                 raise ValidationError("Укажите продолжительность в формате ЧЧ:ММ (например: 01:30)")
         return duration
+
+class GameFilterForm(forms.Form):
+    sport = forms.ChoiceField(
+        choices=[('', 'Все виды спорта')] + list(Game.SPORTS),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control form-control-width',
+            'style': 'background-color: #f8f9fa; border-radius: 5px;'
+        })
+    )
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Поиск по имени или нику',
+            'class': 'form-control form-control-width',
+            'style': 'background-color: #f8f9fa; border-radius: 5px;'
+        })
+    )

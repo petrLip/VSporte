@@ -4,7 +4,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from django.urls import reverse_lazy
-from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -43,14 +42,12 @@ INSTALLED_APPS = [
     "easy_thumbnails",
     "debug_toolbar",
     "bootstrap5",
-    "rosetta",
 ]
 
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -106,12 +103,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGES = [
-    ("en", _("English")),
-    ("ru", _("Russian")),
-]
-
-LANGUAGE_CODE = "en"
+LANGUAGE_CODE = "ru"
 
 TIME_ZONE = "Europe/Samara"
 
@@ -119,11 +111,9 @@ DATE_INPUT_FORMATS = [
     '%d/%m/%Y',
 ]
 
-USE_I18N = True
+USE_I18N = False
 
 USE_TZ = True
-
-LOCALE_PATHS = [os.path.join(BASE_DIR / "locale")]
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
@@ -154,6 +144,10 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 EMAIL_ADMIN = EMAIL_HOST_USER
 ADMINS = json.loads(os.getenv("ADMINS", "[]"))
+
+# Yandex Maps API
+YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
+YANDEX_MAPS_API_KEY_STATIC = os.getenv("YANDEX_MAPS_API_KEY_STATIC")
 
 # celery
 # CELERY_BROKER_URL = 'amqp://guest:guest@localhost'

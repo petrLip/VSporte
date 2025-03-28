@@ -1,47 +1,73 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 
-{% block title %}Games JTeam{% endblock %}
+{% block title %}Список игр{% endblock %}
 
 {% block content %}
-    <h1>Список доступных игр</h1>
-    <p>Выбери игру из списка ниже или создай сам <a href="{% url 'games:create' %}" class="btn btn-primary">Создать игру</a></p>
-
-<!--         id game-list используется для обработки в JavaScript-->
+    <h1>Список игр</h1>
+    <p><a href="{% url 'games:create' %}" class="button">Создать игру</a></p>
+    
+    <!-- Оборачиваем фильтры и список игр в общий контейнер -->
+    <div class="game-list-wrapper">
+        <div class="filter-container">
+          <form method="get" class="filter-form">
+              <div class="filter-row">
+                  <div class="form-group">
+                      <label for="{{ filter_form.sport.id_for_label }}">Sport</label>
+                      {{ filter_form.sport }}
+                  </div>
+      
+                  <div class="form-group">
+                      <label for="{{ filter_form.search.id_for_label }}">Search</label>
+                      {{ filter_form.search }}
+                  </div>
+      
+                  <button type="submit" class="btn btn-success filter-button">Применить</button>
+              </div>
+          </form>
+        </div>
+        
         <div id="game-list">
             {% include "games/game/list_games.html" %}
         </div>
+    </div>
 
-<!--    {% include "pagination.html" with page=games %}-->
+    {% include "pagination.html" with page=games %}
 {% endblock %}
 
 {% block domready %}
 <!--Прокрутка страницы вниз, чтобы загрузить дополнительные страницы-->
- var page = 1;
-  var emptyPage = false;
-  var blockRequest = false;
+var page = 1;
+var emptyPage = false;
+var blockRequest = false;
 
-  window.addEventListener('scroll', function(e) {
+window.addEventListener('scroll', function(e) {
     var margin = document.body.clientHeight - window.innerHeight - 200;
     if(window.pageYOffset > margin && !emptyPage && !blockRequest) {
-      blockRequest = true;
-      page += 1;
-
-      fetch('?games_only=1&page=' + page)
-      .then(response => response.text())
-      .then(html => {
-        if (html === '') {
-          emptyPage = true;
-        }
-        else {
-          var gameList = document.getElementById('game-list');
-          gameList.insertAdjacentHTML('beforeEnd', html);
-          blockRequest = false;
-        }
-      })
+        blockRequest = true;
+        page += 1;
+        
+        // Сохраняем текущие параметры фильтрации
+        var urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('page', page);
+        urlParams.set('games_only', '1');
+        
+        fetch('?' + urlParams.toString())
+        .then(response => response.text())
+        .then(html => {
+            if (html === '') {
+                emptyPage = true;
+            }
+            else {
+                var gameList = document.getElementById('game-list');
+                gameList.insertAdjacentHTML('beforeEnd', html);
+                blockRequest = false;
+            }
+        })
     }
-  });
+});
 
-  // Launch scroll event
-  const scrollEvent = new Event('scroll');
-  window.dispatchEvent(scrollEvent);
+// Launch scroll event
+const scrollEvent = new Event('scroll');
+window.dispatchEvent(scrollEvent);
 {% endblock %}

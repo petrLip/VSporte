@@ -6,12 +6,15 @@
      {% for game in most_viewed %}
         <li>
             <a href="{{ game.get_absolute_url }}">
-                <p class="underline">{{ game.get_sport_display }} - {{ game.user.first_name }}</p>
+                <p class="underline">{{ game.get_sport_display }} - {{ game.user.username }}</p>
             </a>
             <p>
                 <i class="fas fa-calendar"></i> {{ game.date }}&nbsp;&nbsp;&nbsp;
                 <i class="fas fa-clock"></i> {{ game.start_time }}&nbsp;&nbsp;&nbsp;
                 <i class="fas fa-map-marker"></i> {{ game.place }}
+                <span class="game-status status-{{ game.status }}">
+                    <i class="fas fa-circle"></i> {{ game.get_status_display }}
+                </span>
             </p>
         </li>
      {% endfor %}

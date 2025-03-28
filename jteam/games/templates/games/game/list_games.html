@@ -6,10 +6,12 @@
                 <div class="info">
                     <a href="{{ game.get_absolute_url }}">
                         {{ game.get_sport_display }}&nbsp;&nbsp;&nbsp;
-                        <i class="fas fa-calendar"></i> &nbsp; {{ game.date }}&nbsp;&nbsp;&nbsp;
                         <i class="fas fa-clock"></i> {{ game.start_time }}&nbsp;&nbsp;&nbsp;
                         <i class="fas fa-map-marker"></i> &nbsp; {{ game.place }}
                     </a>
+                    <span class="game-status status-{{ game.status }}">
+                        <i class="fas fa-circle"></i> {{ game.get_status_display }}
+                    </span>
                 </div>
               </div>
             </div>

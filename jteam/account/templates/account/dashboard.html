@@ -4,7 +4,7 @@
 
 {% block content %}
 
-  <h1>Dashboard</h1>
+  <h1>Главная</h1>
   {% with total_images_created=request.user.images_created.count %}
   <p>Добро пожаловать,
     {% if user.first_name %}
@@ -12,7 +12,7 @@
     {% else %}
     {{ user.username }}
     {% endif %}
-    , на вашу страницу.</p>
+      , на вашу страницу.</p>
   {% endwith %}
 
     <p>Вы можете также <a href="{% url 'edit' %}">редактировать свой профиль</a>
@@ -22,7 +22,7 @@
   <a href="{% url 'games:create' %}" class="button">Создать игру</a>
   <a href="{% url 'games:ranking' %}" class="button">Рейтинг игр</a>
 
-  <h2>What's happening</h2>
+  <h2>События</h2>
   <div id="action-list">
       {% for action in actions %}
         {% include "actions/action/detail.html" %}

@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +6,6 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}{% endblock %}</title>
-    {% load static %}
     {% load bootstrap5 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
@@ -17,37 +16,26 @@
     <script src="{% static 'fontawesomefree/js/solid.js' %}"></script>
     <script src="{% static 'fontawesomefree/js/brands.js' %}"></script>
     <!-- end icons with fontawesomefree -->
-
+     
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
     <div id="header">
         <span class="logo"><a href="{% url 'dashboard' %}">JTeam</a></span>
 
-        {% get_current_language as LANGUAGE_CODE %}
-        {% get_available_languages as LANGUAGES %}
-        {% get_language_info_list for LANGUAGES as languages %}
-
-        <div class="languages">
-            {% for language in languages %}
-              {% if language.code != LANGUAGE_CODE %}
-                  <a href="/{{ language.code }}{% if language.code == 'en' %}/account{% elif language.code == 'ru' %}/аккаунт{% else %}/account{% endif %}/">{{ language.name_local }}</a>
-              {% endif %}
-            {% endfor %}
-        </div>
-
         {% if request.user.is_authenticated %}
             <ul class="menu">
                 <li {% if section == 'dashboard' %} class='selected'{% endif %}>
-                    <a href="{% url 'dashboard' %}">{% trans "Main" %}</a>
+                    <a href="{% url 'dashboard' %}">Главная</a>
                 </li>
                 <li {% if section == "games" %} class="selected"{% endif %}>
-                    <a href="{% url 'games:list' %}">{% trans "Game list" %}</a>
+                    <a href="{% url 'games:list' %}">Список игр</a>
                 </li>
                 <li {% if section == "people" %}class="selected"{% endif %}>
-                    <a href="{% url 'user_list' %}">{% trans "Gamers" %}</a>
+                    <a href="{% url 'user_list' %}">Игроки</a>
                 </li>
                 <li {% if section == "location" %} class="selected"{% endif %}>
-                    <a href="{% url 'location:list' %}">{% trans "Places list" %}</a>
+                    <a href="{% url 'location:list' %}">Площадки</a>
                 </li>
                 <li {% if section == "cart" %} class="selected"{% endif %}>
                       {% with total_items=cart|length %}
@@ -56,12 +44,6 @@
                               <i class="fas fa-shopping-cart"></i>
                                       {{ total_items }} {{ total_items|pluralize }},
                                       ₽{{ cart.get_total_price }}
-
-<!--                                  {% blocktrans with total=cart.get_total_price count items=total_items %}-->
-<!--                                    {{ items }} cart, ₽{{ total }}-->
-<!--                                  {% plural %}-->
-<!--                                    {{ items }} carts, ₽{{ total }}-->
-<!--                                  {% endblocktrans %}-->
                           </a>
                         {% elif not order %}
                             <a href="{% url 'cart:cart_detail' %}">
@@ -74,14 +56,15 @@
         {% endif %}
         <span class="user">
             {% if request.user.is_authenticated %}
-                Hello {{ request.user.first_name|default:request.user.username }},
-<!--                ссылка не работала пришлось поменять на форму-->
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-success">выйти</button>
-                </form>
+                <div class="user-info">
+                    <span>Привет, {{ request.user.first_name|default:request.user.username }}</span>
+                    <form action="{% url 'logout' %}" method="post" class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">Выйти</button>
+                    </form>
+                </div>
             {% else %}
-                <a href="{% url 'login' %}">Log-in</a>
+                <a href="{% url 'login' %}">Войти</a>
             {% endif %}
         </span>
     </div>
@@ -127,5 +110,12 @@
         {% block content %}
         {% endblock %}
     </div>
+
+    {% block extra_scripts %}{% endblock %}
+    <div id="user-local-time" style="position: fixed; bottom: 10px; right: 10px; padding: 5px 10px; background-color: #f8f9fa; border-radius: 5px;">
+    Определение местного времени...
+    </div>
+
+    <script src="{% static 'js/local_time.js' %}"></script>
 </body>
 </html>
