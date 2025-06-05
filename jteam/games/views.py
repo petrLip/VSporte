@@ -9,8 +9,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from actions.utils import create_action
-from django.db.models import Q
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank, TrigramSimilarity
+from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models.functions import Greatest
 import logging
 
@@ -158,31 +157,35 @@ def game_list(request):
 @login_required
 @require_POST
 def game_join(request):
-    """Представление, которое позволяет пользователям присоед./выйти из игры"""
+    """Представление, позволяющее присоединиться/выйти из игры"""
     game_id = request.POST.get("id")
-    # action берется из атрибута action="/submit", если его нет, то есть ещё варианты.
     action = request.POST.get("action")
     if game_id and action:
         try:
             game = Game.objects.get(id=game_id)
             if action == "join":
-                # Проверяет лимит присоединений
                 if game.joined_players.count() >= game.max_players:
-                    messages.error(
-                        request, "Максимальное количество игроков достигнуто."
-                    )
-                    return JsonResponse(
-                        {
-                            "status": "error",
-                            "message": "Максимальное количество игроков достигнуто.",
-                        }
-                    )
-                # Добавление пользователя в игру
+                    return JsonResponse({
+                        "status": "error",
+                        "message": "Максимальное количество игроков достигнуто.",
+                    })
                 game.joined_players.add(request.user)
                 create_action(request.user, "присоединился(ась) к игре", game)
             else:
                 game.joined_players.remove(request.user)
-            return JsonResponse({"status": "ok"})
+
+            players = [
+                {
+                    "username": player.username,
+                    "photo": player.profile.photo.url
+                } for player in game.joined_players.all()
+            ]
+
+            return JsonResponse({
+                "status": "ok",
+                "players": players,
+                "players_count": game.joined_players.count()
+            })
         except Game.DoesNotExist:
             pass
     return JsonResponse({"status": "error"})

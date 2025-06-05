@@ -104,37 +104,6 @@ services:
     networks:
       - vsporte
 
-#  flower:
-#    build:
-#      context: .
-#    hostname: flower
-#    entrypoint: celery
-#    command: -A jteam.celery:app flower
-#    volumes:
-#      - ./jteam:/jteam
-#    links:
-#      - redis
-#    depends_on:
-#      - redis
-#    ports:
-#      - "5555:5555"
-#    networks:
-#      - vsporte
-
-#  pgadmin:
-#    image: dpage/pgadmin4
-#    container_name: jteam_pgadmin
-#    environment:
-#      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
-#      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
-#      - PGADMIN_LISTEN_PORT=80
-#    ports:
-#      - "8080:80"
-#    depends_on:
-#      - database
-#    networks:
-#      - vsporte
-
 networks:
   vsporte:
 

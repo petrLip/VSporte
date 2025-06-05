@@ -98,6 +98,23 @@
     </div>
 
     {% endwith %}
+<div>
+    Игроков: <span id="players-count">{{ game.joined_players.count }}</span>
+</div>
+
+<div id="players-list">
+    {% for player in game.joined_players.all %}
+        <div class="player">
+            <img src="{{ player.profile.photo.url }}" alt="{{ player.username }}" class="player-avatar">
+            <span class="player-username">{{ player.username }}</span>
+        </div>
+    {% endfor %}
+</div>
+
+<button id="join-btn" data-action="{% if request.user in game.joined_players.all %}leave{% else %}join{% endif %}">
+    {% if request.user in game.joined_players.all %}Покинуть игру{% else %}Присоединиться{% endif %}
+</button>
+
 {% endblock %}
 
 {% block domready %}
@@ -177,3 +194,48 @@
   });
 </script>
 {% endblock %}
+
+$(document).on('click', '#join-btn', function(e) {
+    e.preventDefault();
+    var $this = $(this);
+    var action = $this.data('action');
+
+    $.ajax({
+        type: 'POST',
+        url: '{% url "games:join" %}',
+        data: {
+            id: '{{ game.id }}',
+            action: action,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(data) {
+            if (data.status === 'ok') {
+                // Обновляем количество игроков
+                $('#players-count').text(data.players_count);
+
+                // Динамически обновляем список игроков
+                let playersList = $('#players-list');
+                playersList.empty();
+
+                data.players.forEach(player => {
+                    playersList.append(`
+                        <div class="player">
+                            <img src="${player.photo}" alt="${player.username}" class="player-avatar">
+                            <span class="player-username">${player.username}</span>
+                        </div>
+                    `);
+                });
+
+                // Меняем текст кнопки
+                if(action === 'join') {
+                    $this.data('action', 'leave').text('Покинуть игру');
+                } else {
+                    $this.data('action', 'join').text('Присоединиться');
+                }
+            } else {
+                alert(data.message);
+            }
+        }
+    });
+});
+
