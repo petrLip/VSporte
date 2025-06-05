@@ -193,49 +193,51 @@
     }
   });
 </script>
-{% endblock %}
+<script>
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'join-btn') {
+      e.preventDefault();
+      const btn = e.target;
+      const action = btn.dataset.action;
 
-$(document).on('click', '#join-btn', function(e) {
-    e.preventDefault();
-    var $this = $(this);
-    var action = $this.data('action');
+      const formData = new FormData();
+      formData.append('id', '{{ game.id }}');
+      formData.append('action', action);
 
-    $.ajax({
-        type: 'POST',
-        url: '{% url "games:join" %}',
-        data: {
-            id: '{{ game.id }}',
-            action: action,
-            csrfmiddlewaretoken: '{{ csrf_token }}'
-        },
-        success: function(data) {
-            if (data.status === 'ok') {
-                // Обновляем количество игроков
-                $('#players-count').text(data.players_count);
+      fetch('{% url "games:join" %}', {
+        method: 'POST',
+        headers: {'X-CSRFToken': csrftoken},
+        body: formData,
+        mode: 'same-origin'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'ok') {
+          document.getElementById('players-count').textContent = data.players_count;
 
-                // Динамически обновляем список игроков
-                let playersList = $('#players-list');
-                playersList.empty();
+          const playersList = document.getElementById('players-list');
+          playersList.innerHTML = '';
+          data.players.forEach(player => {
+            playersList.insertAdjacentHTML('beforeend', `
+              <div class="player">
+                <img src="${player.photo}" alt="${player.username}" class="player-avatar">
+                <span class="player-username">${player.username}</span>
+              </div>
+            `);
+          });
 
-                data.players.forEach(player => {
-                    playersList.append(`
-                        <div class="player">
-                            <img src="${player.photo}" alt="${player.username}" class="player-avatar">
-                            <span class="player-username">${player.username}</span>
-                        </div>
-                    `);
-                });
-
-                // Меняем текст кнопки
-                if(action === 'join') {
-                    $this.data('action', 'leave').text('Покинуть игру');
-                } else {
-                    $this.data('action', 'join').text('Присоединиться');
-                }
-            } else {
-                alert(data.message);
-            }
+          if (action === 'join') {
+            btn.dataset.action = 'leave';
+            btn.textContent = 'Покинуть игру';
+          } else {
+            btn.dataset.action = 'join';
+            btn.textContent = 'Присоединиться';
+          }
+        } else {
+          alert(data.message);
         }
-    });
-});
-
+      });
+    }
+  });
+  </script>
+{% endblock %}
