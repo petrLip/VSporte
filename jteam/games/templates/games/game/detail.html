@@ -3,241 +3,153 @@
 
 {% block title %}{{ game.sport }} | {{ user.username }}{% endblock %}
 {% block extra_head %}
-<script src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_MAPS_API_KEY }}&lang=ru_RU"></script>
+  <script src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_MAPS_API_KEY }}&lang=ru_RU"></script>
 {% endblock %}
 
 {% block content %}
-    <div class="game-header">
-        <h1>{{ game.get_sport_display }}
-            <p>{% if game.image %}
-              {% thumbnail game.image "100x100" crop="100%" as cover %}
-                <img src="{{ cover.url }}" class="item-img">
-            {% endif %}
-            </p>
-        </h1>
-        {% if request.user == game.user and game.status == 'open' %}
-            <div class="game-actions">
-                <form action="{% url 'games:delete' game.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('Вы уверены, что хотите удалить эту игру?')">
-                        <i class="fas fa-trash"></i> Удалить игру
-                    </button>
-                </form>
-            </div>
+  <div class="game-header">
+    <h1>{{ game.get_sport_display }}
+      {% if game.image %}
+        {% thumbnail game.image "100x100" crop="100%" as cover %}
+          <img src="{{ cover.url }}" class="item-img">
         {% endif %}
-    </div>
+    </h1>
 
-    <p>{{ game.user.username }} - {{ game.user.email }}</p>
-    <p>
-        <i class="fas fa-calendar"></i> {{ game.date }}&nbsp;&nbsp;&nbsp;
-        <i class="fas fa-clock"></i> {{ game.start_time }}&nbsp;&nbsp;&nbsp;
-        <i class="fas fa-map-marker"></i> {{ game.place }}
-        <!-- Контейнер карты -->
-    </p>
-
-    <div id="map" style="width: 25%; height: 200px; margin-top: 20px;"></div>
-
-    <!-- Вывод статуса игры -->
-    <p>
-        <strong>Status:</strong> {{ game.get_status_display }}
-    </p>
-
-    <p>{{ game.description }}</p>
-
-    <p>
-      <i class="fas fa-coins"></i> {{ game.price }}
-    </p>
-
-    {% with total_jones=game.joined_players.count joined_players=game.joined_players.all %}
-    <div class="game-stats-container">
-        <div class="game-stats">
-            <p>
-                <i class="fas fa-users"></i>
-                <span class="count">{{ total_jones }} / {{ game.max_players }}</span>
-            </p>
-            <p>
-                <i class="fas fa-eye"></i>
-                <span class="count">{{ total_views }} view{{ total_views|pluralize }}</span>
-            </p>
-        </div>
-    </div>
-    
-    {% if game.status == 'open' %}
-    <a href="#" data-id="{{ game.id }}"
-       data-action="{% if request.user in joined_players %}un{% endif %}join"
-       data-max-players="{{ game.max_players }}"
-       class="like button">
-        {% if request.user not in joined_players %}
-            Join
-        {% else %}
-            Unjoin
-        {% endif %}
-    </a>
-    {% else %}
-    <p class="game-status-message">
-        {% if game.status == 'started' %}
-            Игра уже началась
-        {% elif game.status == 'finished' %}
-            Игра уже закончилась
-        {% endif %}
-    </p>
+    {% if request.user == game.user and game.status == 'open' %}
+      <div class="game-actions">
+        <form action="{% url 'games:delete' game.id %}" method="post">
+          {% csrf_token %}
+          <button type="submit"
+                  class="btn btn-danger"
+                  onclick="return confirm('Вы уверены, что хотите удалить эту игру?')">
+            <i class="fas fa-trash"></i> Удалить игру
+          </button>
+        </form>
+      </div>
     {% endif %}
+  </div>
 
-    <div class="image-likes">
-        {% for user in joined_players %}
-            <div>
-                {% if user.profile.photo %}
-                    {% thumbnail user.profile.photo "80x80" crop="100%" as im %}
-                    <img src="{{ im.url }}" class="item-img">
-                {% endif %}
-                <p>{{ user.username }}</p>
-            </div>
-        {% empty %}
-            No players have joined
-        {% endfor %}
+  <p>{{ game.user.username }} – {{ game.user.email }}</p>
+  <p>
+    <i class="fas fa-calendar"></i> {{ game.date }}&nbsp;&nbsp;&nbsp;
+    <i class="fas fa-clock"></i> {{ game.start_time }}&nbsp;&nbsp;&nbsp;
+    <i class="fas fa-map-marker"></i> {{ game.place }}
+  </p>
+
+  <div id="map" style="width: 25%; height: 200px; margin-top: 20px;"></div>
+
+  <p><strong>Status:</strong> {{ game.get_status_display }}</p>
+  <p>{{ game.description }}</p>
+  <p><i class="fas fa-coins"></i> {{ game.price }}</p>
+
+  {# --- статистика игроков --- #}
+  <div class="game-stats-container">
+    <div class="game-stats">
+      <p>
+        <i class="fas fa-users"></i>
+        <span class="count">{{ game.joined_players.count }} / {{ game.max_players }}</span>
+      </p>
+      <p>
+        <i class="fas fa-eye"></i>
+        <span class="count">{{ total_views }} view{{ total_views|pluralize }}</span>
+      </p>
     </div>
+  </div>
 
-    {% endwith %}
-<div>
-    Игроков: <span id="players-count">{{ game.joined_players.count }}</span>
-</div>
+  {# --- кнопка присоединения (теперь единственная) --- #}
+  {% if game.status == 'open' %}
+    <button id="join-btn"
+            class="button like"
+            data-id="{{ game.id }}"
+            data-action="{% if request.user in game.joined_players.all %}leave{% else %}join{% endif %}">
+      {% if request.user in game.joined_players.all %}Покинуть игру{% else %}Присоединиться{% endif %}
+    </button>
+  {% else %}
+    <p class="game-status-message">
+      {% if game.status == 'started' %}Игра уже началась{% elif game.status == 'finished' %}Игра уже закончилась{% endif %}
+    </p>
+  {% endif %}
 
-<div id="players-list">
-    {% for player in game.joined_players.all %}
-        <div class="player">
-            <img src="{{ player.profile.photo.url }}" alt="{{ player.username }}" class="player-avatar">
-            <span class="player-username">{{ player.username }}</span>
-        </div>
+  {# --- аватарки игроков --- #}
+  <div id="players-list">
+    {% for p in game.joined_players.all %}
+      <div class="player">
+        {% if p.profile.photo %}
+          {% thumbnail p.profile.photo "player_avatar" as im %}
+            <a href="{{ p.get_absolute_url }}">
+              <img src="{{ im.url }}" alt="{{ p.username }}" class="player-avatar">
+            </a>
+        {% endif %}
+        <a href="{{ p.get_absolute_url }}" class="player-username">{{ p.username }}</a>
+      </div>
+    {% empty %}
+      <p>Пока нет игроков</p>
     {% endfor %}
-</div>
-
-<button id="join-btn" data-action="{% if request.user in game.joined_players.all %}leave{% else %}join{% endif %}">
-    {% if request.user in game.joined_players.all %}Покинуть игру{% else %}Присоединиться{% endif %}
-</button>
-
-{% endblock %}
-
-{% block domready %}
-    {% if game.status == 'open' %}
-    const url = '{% url "games:join" %}';
-
-    var options = {
-        method: 'POST',
-        headers: {'X-CSRFToken': csrftoken},
-        mode: 'same-origin'
-    }
-
-    document.querySelector('a.button')
-            .addEventListener('click', function(e){
-        e.preventDefault();
-        var joinButton = this;
-
-        var gameId = joinButton.dataset.id;
-        var action = joinButton.dataset.action;
-
-    // добавить тело запроса
-    var formData = new FormData();
-    formData.append('id', joinButton.dataset.id);
-    formData.append('action', joinButton.dataset.action);
-    options['body'] = formData;
-
-    // отправить HTTP-запрос
-    fetch(url, options)
-    .then(response => response.json())
-    .then(data => {
-        if (data['status'] ==='ok')
-        {
-            var previousAction = joinButton.dataset.action;
-
-            // переключить текст кнопки и атрибут data-action
-            var action = previousAction === 'join' ? 'unjoin' : 'join';
-            joinButton.dataset.action = action;
-            joinButton.innerHTML = action;
-
-            // обновить количество присоединений игроков
-            var joinCount = document.querySelector('span.count');
-            var totalJoins = parseInt(joinCount.innerHTML);
-            var maxPlayers = parseInt(joinButton.dataset.maxPlayers);
-            joinCount.innerHTML = previousAction === 'join' ? totalJoins + 1 + ' / ' + maxPlayers : totalJoins - 1 + ' / ' + maxPlayers;
-        }
-      })
-    });
-{% endif %}
+  </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    ymaps.ready(initMap);
-
-    function initMap() {
+  /* === карта (без изменений) === */
+  document.addEventListener('DOMContentLoaded', function () {
+    ymaps.ready(function () {
       {% if game.latitude and game.longitude %}
-        var latitude = parseFloat("{{ game.latitude|floatformat:'6'|stringformat:'s' }}".replace(',', '.'));
-        var longitude = parseFloat("{{ game.longitude|floatformat:'6'|stringformat:'s' }}".replace(',', '.'));
+        const lat = parseFloat("{{ game.latitude|floatformat:'6'|stringformat:'s' }}".replace(',', '.'));
+        const lng = parseFloat("{{ game.longitude|floatformat:'6'|stringformat:'s' }}".replace(',', '.'));
       {% else %}
-        var latitude = 55.76;
-        var longitude = 37.64;
+        const lat = 55.76, lng = 37.64;  // центр Москвы
       {% endif %}
 
-      var map = new ymaps.Map("map", {
-        center: [latitude, longitude],
-        zoom: 17,
-        controls: ['zoomControl']
-      });
+      const map = new ymaps.Map('map', {center: [lat, lng], zoom: 17, controls: ['zoomControl']});
+      map.geoObjects.add(new ymaps.Placemark([lat, lng], {balloonContent: '{{ game.place|escapejs }}'}));
+    });
+  });
 
-      var placemark = new ymaps.Placemark([latitude, longitude], {
-        balloonContent: '{{ game.place|escapejs }}'
-      });
+  /* === логика Join / Leave === */
+  document.addEventListener('click', async function (e) {
+    if (e.target?.id !== 'join-btn') return;
 
-      map.geoObjects.add(placemark);
+    e.preventDefault();
+    const btn    = e.target;
+    const action = btn.dataset.action;
+
+    const body = new FormData();
+    body.append('id',   btn.dataset.id);
+    body.append('action', action);
+
+    const rsp = await fetch('{% url "games:join" %}', {
+      method: 'POST',
+      mode:   'same-origin',
+      headers: {'X-CSRFToken': csrftoken},
+      body
+    });
+
+    const data = await rsp.json();
+    if (data.status !== 'ok') { alert(data.message); return; }
+
+    /* --- 1. Обновляем счётчик в .game-stats --- */
+    const stats = document.querySelector('.game-stats .count');
+    if (stats) stats.textContent = `${data.players_count} / {{ game.max_players }}`;
+
+    /* --- 2. Перерисовываем список игроков --- */
+    const list = document.getElementById('players-list');
+    list.innerHTML = '';
+    data.players.forEach(p => {
+      list.insertAdjacentHTML('beforeend', `
+        <div class="player">
+          ${p.photo ? `<img src="${p.photo}" alt="${p.username}" class="player-avatar">` : ''}
+          <span class="player-username">${p.username}</span>
+        </div>`);
+    });
+
+    /* --- 3. Меняем состояние кнопки --- */
+    if (action === 'join') {
+      btn.dataset.action = 'leave';
+      btn.textContent = 'Покинуть игру';
+    } else {
+      btn.dataset.action = 'join';
+      btn.textContent = 'Присоединиться';
     }
   });
 </script>
-<script>
-  document.addEventListener('click', function(e) {
-    if (e.target && e.target.id === 'join-btn') {
-      e.preventDefault();
-      const btn = e.target;
-      const action = btn.dataset.action;
-
-      const formData = new FormData();
-      formData.append('id', '{{ game.id }}');
-      formData.append('action', action);
-
-      fetch('{% url "games:join" %}', {
-        method: 'POST',
-        headers: {'X-CSRFToken': csrftoken},
-        body: formData,
-        mode: 'same-origin'
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'ok') {
-          document.getElementById('players-count').textContent = data.players_count;
-
-          const playersList = document.getElementById('players-list');
-          playersList.innerHTML = '';
-          data.players.forEach(player => {
-            playersList.insertAdjacentHTML('beforeend', `
-              <div class="player">
-                <img src="${player.photo}" alt="${player.username}" class="player-avatar">
-                <span class="player-username">${player.username}</span>
-              </div>
-            `);
-          });
-
-          if (action === 'join') {
-            btn.dataset.action = 'leave';
-            btn.textContent = 'Покинуть игру';
-          } else {
-            btn.dataset.action = 'join';
-            btn.textContent = 'Присоединиться';
-          }
-        } else {
-          alert(data.message);
-        }
-      });
-    }
-  });
-  </script>
 {% endblock %}

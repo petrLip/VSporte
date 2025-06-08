@@ -12,6 +12,7 @@ from actions.utils import create_action
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models.functions import Greatest
 import logging
+from easy_thumbnails.files import get_thumbnailer
 
 from .forms import GameCreateForm, GameFilterForm
 from .models import Game
@@ -174,12 +175,17 @@ def game_join(request):
             else:
                 game.joined_players.remove(request.user)
 
-            players = [
-                {
+            players = []
+            for player in game.joined_players.all():
+                thumb_url = None
+                if player.profile.photo:
+                    thumb_opts = {'size': (80, 80), 'crop': True, 'upscale': True}
+                    thumb_url = get_thumbnailer(player.profile.photo).get_thumbnail(thumb_opts).url
+
+                players.append({
                     "username": player.username,
-                    "photo": player.profile.photo.url
-                } for player in game.joined_players.all()
-            ]
+                    "photo": thumb_url,
+                })
 
             return JsonResponse({
                 "status": "ok",

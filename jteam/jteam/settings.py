@@ -215,6 +215,14 @@ STRIPE_API_VERSION = os.getenv("STRIPE_API_VERSION")
 # веб-перехватчика Stripe
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
+# THUMBNAIL
+THUMBNAIL_ALIASES = {
+    '': {
+        'player_avatar': {'size': (80, 80), 'crop': True, 'upscale': True},
+    },
+}
+
+
 # Настройки логирования
 LOGGING = {
     'version': 1,
