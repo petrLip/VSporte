@@ -1,5 +1,9 @@
 @import url(//fonts.googleapis.com/css?family=Muli);
 
+.orange-text {
+  color: #fe6b19;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -325,6 +329,32 @@ a.follow {
 
 
 /* users */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 8px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-link {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.profile-link:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
 #people-list img {
     width: 80px;
     height: 80px;
