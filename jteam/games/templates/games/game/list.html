@@ -13,21 +13,21 @@
           <form method="get" class="filter-form">
               <div class="filter-row">
                   <div class="form-group">
-                      <label for="{{ filter_form.sport.id_for_label }}">Sport</label>
+                      <label for="{{ filter_form.sport.id_for_label }}">Спорт</label>
                       {{ filter_form.sport }}
                   </div>
       
                   <div class="form-group">
-                      <label for="{{ filter_form.search.id_for_label }}">Search</label>
+                      <label for="{{ filter_form.search.id_for_label }}">Поиск</label>
                       {{ filter_form.search }}
                   </div>
       
-                  <button type="submit" class="btn btn-success filter-button">Применить</button>
+                  <button type="submit" class="button filter-button">Применить</button>
               </div>
           </form>
         </div>
         
-        <div id="game-list">
+        <div id="game-list" style="overflow:visible;">
             {% include "games/game/list_games.html" %}
         </div>
     </div>

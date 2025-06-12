@@ -12,19 +12,18 @@
     {% for user in users %}
       <div class="user">
         <a href="{{ user.get_absolute_url }}">
-
              {% if user.profile.photo %}
-<!--                {# миниатюра фотографии #}-->
-                <img src="{% thumbnail user.profile.photo 220x220 %}">
+                <img src="{% thumbnail user.profile.photo 220x320 %}">
              {% else %}
-<!--                 {# типовое изображение #}-->
                  <img src="{{ user.profile.photo }}">
              {% endif %}
         </a>
+        <div class="user-overlay"></div>
         <div class="info">
           <a href="{{ user.get_absolute_url }}" class="title">
-            {{ user.get_full_name }} <p>{{ user.username }}</p>
+            {{ user.get_full_name }}
           </a>
+          <p>{{ user.profile.city|default:user.username }}</p>
         </div>
       </div>
     {% endfor %}

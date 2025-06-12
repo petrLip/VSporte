@@ -58,6 +58,7 @@
         <span class="user">
             {% if request.user.is_authenticated %}
                 <div class="user-info">
+                    <span id="user-local-time" class="mini-local-time">Определение местного времени...</span>
                     {% if request.user.profile.photo %}
                         <a href="{{ user.get_absolute_url }}">
                             <img src="{% thumbnail request.user.profile.photo 40x40 crop %}" class="user-avatar">
@@ -122,10 +123,6 @@
     </div>
 
     {% block extra_scripts %}{% endblock %}
-    <div id="user-local-time" style="position: fixed; bottom: 10px; right: 10px; padding: 5px 10px; background-color: #f8f9fa; border-radius: 5px;">
-    Определение местного времени...
-    </div>
-
     <script src="{% static 'js/local_time.js' %}"></script>
 </body>
 </html>

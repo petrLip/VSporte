@@ -1,21 +1,34 @@
-<div class="row row-cols-1 g-4">
+{% load game_extras %}
 {% for game in games %}
-    <div class="col">
-            <div class="card">
-              <div class="card-body">
-                <div class="info">
-                    <a href="{{ game.get_absolute_url }}">
-                        {{ game.get_sport_display }}&nbsp;&nbsp;&nbsp;
-                        <i class="fas fa-clock"></i> {{ game.start_time }}&nbsp;&nbsp;&nbsp;
-                        <i class="fas fa-map-marker"></i> &nbsp; {{ game.place }}
-                    </a>
-                    <span class="game-status status-{{ game.status }}">
-                        <i class="fas fa-circle"></i> {{ game.get_status_display }}
-                    </span>
-                </div>
-              </div>
+    <div class="game-card-horizontal d-flex align-items-start justify-content-between mb-2 position-relative">
+        <div class="game-info">
+            <div class="game-sport fw-bold">{{ game.get_sport_display }}</div>
+            <div class="game-place fw-bold">"{{ game.place }}"</div>
+            <div class="game-format">
+                <i class="fas fa-users"></i> {{ game.joined_players.count }} / {{ game.max_players }}
             </div>
+            <div class="game-time">
+                {{ game.start_time|date:"H:i, d.m" }},
+                {# 0 - воскресенье, 1 - понедельник ... #}
+                {% if game.start_time|date:'w' == '1' %}ПН{% elif game.start_time|date:'w' == '2' %}ВТ{% elif game.start_time|date:'w' == '3' %}СР{% elif game.start_time|date:'w' == '4' %}ЧТ{% elif game.start_time|date:'w' == '5' %}ПТ{% elif game.start_time|date:'w' == '6' %}СБ{% else %}ВС{% endif %}
+            </div>
+        </div>
+        <div class="game-meta text-end">
+            <span class="game-status status-{{ game.status }}">
+                <i class="fas fa-circle"></i> {{ game.get_status_display }}
+            </span>
+            <div class="game-price mt-1">{{ game.price|floatformat:0 }} <span class="rouble">₽</span></div>
+            {% with free=game.max_players|add:"-1" %}
+                <div class="game-slots {% if free > 0 %}orange-text{% else %}text-danger{% endif %}">
+                    {% if free > 0 %}
+                        Осталось <span class="slots-count">{{ free }} мест</span>
+                    {% else %}
+                        Мест не осталось
+                    {% endif %}
+                </div>
+            {% endwith %}
+            <a href="{{ game.get_absolute_url }}" class="btn btn-outline-success btn-sm mt-2">Подробнее</a>
+        </div>
     </div>
 {% endfor %}
-</div>
 

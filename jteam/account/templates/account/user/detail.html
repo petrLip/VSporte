@@ -4,7 +4,17 @@
 {% block title %}{{ user.get_full_name }}{% endblock %}
 
 {% block content %}
+  <p>Добро пожаловать,
+    {% if user.first_name %}
+    {{ user.first_name }}
+    {% else %}
+    {{ user.username }}
+    {% endif %}
+      , на вашу страницу.</p>
 
+    <p>Вы можете также <a href="{% url 'edit' %}">редактировать свой профиль</a>
+    или <a href="{% url 'password_change' %}"> изменить свой пароль </a>
+  </p>
  <div class="profile-info">
       <h1>{{ user.get_full_name }}</h1>
          <p>{{ user.profile.date_of_birth }}</p>
