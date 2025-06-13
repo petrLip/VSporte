@@ -505,13 +505,25 @@ a.follow {
 }
 
 .form-control.form-control-width {
-    max-width: 300px;
+    width: 100%;
+    max-width: 320px;
     /* Измените это значение в соответствии с вашими предпочтениями */
-    box-sizing: content-box;
+    box-sizing: border-box;
 }
 
 .form-control {
-    box-sizing: content-box;
+    box-sizing: border-box;
+}
+
+.form-select {
+    box-sizing: border-box;
+}
+
+.form-select.form-control-width {
+    width: 100%;
+    max-width: 320px;
+    /* Измените это значение в соответствии с вашими предпочтениями */
+    box-sizing: border-box;
 }
 
 .createGame {
@@ -529,7 +541,7 @@ a.follow {
 }
 
 #game-list {
-    overflow: hidden;
+    overflow: visible;
 }
 
 #game-list .game {
@@ -1008,9 +1020,14 @@ form p input {
 
 .filter-container {
     background-color: #f8f9fa;
-    padding: 10px;
+    padding: 12px 8px 12px 0;
     border-radius: 5px;
     margin-bottom: 8px;
+    overflow: visible;
+    position: relative;
+    /* создаём новый контекст наложения */
+    z-index: 1;
+    /* выводим колонку поверх соседей */
 }
 
 .filter-row {
@@ -1060,6 +1077,21 @@ form p input {
 #game-list {
     flex: 1;
 }
+
+/* Боковой фильтр */
+.filter-container .button {
+    width: 100%;
+    /* растягиваем обе кнопки во всю ширину панели */
+    display: block;
+    text-align: center;
+    /* ⬅️ центрируем текст */
+}
+
+.create-game-button {
+    /* дополнительный «воздух» под кнопкой */
+    margin-top: 6px;
+}
+
 
 /* Dashboard promo */
 .play-book-banner {
@@ -1427,12 +1459,20 @@ form p input {
     align-items: flex-start;
     min-height: 80px;
     transition: box-shadow 0.18s, border-color 0.18s, transform 0.18s;
+    cursor: pointer;
+    color: inherit;
 }
 
 .game-card-horizontal:hover {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
     border-color: #12c064;
     transform: translateY(-2px) scale(1.01);
+    text-decoration: none;
+    color: inherit;
+}
+
+.game-card-horizontal:active {
+    transform: translateY(0) scale(0.99);
 }
 
 .game-info {
@@ -1520,4 +1560,45 @@ form p input {
     justify-content: center;
     margin-bottom: 10px;
     font-size: 1.7em;
+}
+
+/* base.css */
+form.filter-form {
+    /* только для фильтра, не затрагивая другие формы */
+    overflow: visible;
+}
+
+.games-page-header {
+    display: flex;
+    /* кладём h1 и p в одну строку */
+    align-items: center;
+    /* выравниваем по базовой линии */
+    justify-content: space-between;
+    margin-bottom: 20px;
+    /* прежний «отступ вниз» для красоты */
+}
+
+.games-page-header h1 {
+    margin: 0;
+    /* убираем стандартные margin h1 */
+}
+
+.games-page-header p {
+    margin: 0;
+    /* убираем margin у <p> с кнопкой */
+}
+
+/* вертикальная колонка элементов фильтра */
+.filter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    /* единый интервал */
+}
+
+/* кнопка Применить – убираем собственный отступ, она и так попадёт в gap */
+.filter-button {
+    padding: 8px 16px;
+    margin: 0;
+    /* раньше было margin-bottom:5px */
 }

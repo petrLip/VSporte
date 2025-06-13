@@ -4,8 +4,9 @@
 {% block title %}Список игр{% endblock %}
 
 {% block content %}
-    <h1>Список игр</h1>
-    <p><a href="{% url 'games:create' %}" class="button">Создать игру</a></p>
+    <div class="games-page-header">
+        <h1>ИГРЫ</h1>
+    </div>
     
     <!-- Оборачиваем фильтры и список игр в общий контейнер -->
     <div class="game-list-wrapper">
@@ -25,6 +26,10 @@
                   <button type="submit" class="button filter-button">Применить</button>
               </div>
           </form>
+          <a  href="{% url 'games:create' %}"
+              class="button create-game-button">
+              Создать игру
+          </a>
         </div>
         
         <div id="game-list" style="overflow:visible;">

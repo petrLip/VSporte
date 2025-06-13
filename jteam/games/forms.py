@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from .models import Game
 from .widgets import CustomDateTimeInput
 
+
 class GameCreateForm(forms.ModelForm):
     """
     Форма создания игры.
@@ -143,6 +144,7 @@ class GameCreateForm(forms.ModelForm):
             except ValueError:
                 raise ValidationError("Укажите продолжительность в формате ЧЧ:ММ (например: 01:30)")
         return duration
+
 
 class GameFilterForm(forms.Form):
     sport = forms.ChoiceField(

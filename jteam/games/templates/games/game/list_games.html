@@ -1,16 +1,18 @@
 {% load game_extras %}
 {% for game in games %}
-    <div class="game-card-horizontal d-flex align-items-start justify-content-between mb-2 position-relative">
+    <a href="{{ game.get_absolute_url }}" class="game-card-horizontal d-flex align-items-start justify-content-between mb-2 position-relative text-decoration-none">
         <div class="game-info">
             <div class="game-sport fw-bold">{{ game.get_sport_display }}</div>
+            <div class="game-time">
+                {{ game.start_time|date:"H:i" }},
+                {{ game.start_time|date:"d" }}
+                {% if game.start_time|date:'m' == '01' %}января{% elif game.start_time|date:'m' == '02' %}февраля{% elif game.start_time|date:'m' == '03' %}марта{% elif game.start_time|date:'m' == '04' %}апреля{% elif game.start_time|date:'m' == '05' %}мая{% elif game.start_time|date:'m' == '06' %}июня{% elif game.start_time|date:'m' == '07' %}июля{% elif game.start_time|date:'m' == '08' %}августа{% elif game.start_time|date:'m' == '09' %}сентября{% elif game.start_time|date:'m' == '10' %}октября{% elif game.start_time|date:'m' == '11' %}ноября{% else %}декабря{% endif %},
+                {# 0 - воскресенье, 1 - понедельник ... #}
+                {% if game.start_time|date:'w' == '1' %}пн{% elif game.start_time|date:'w' == '2' %}вт{% elif game.start_time|date:'w' == '3' %}ср{% elif game.start_time|date:'w' == '4' %}чт{% elif game.start_time|date:'w' == '5' %}пт{% elif game.start_time|date:'w' == '6' %}сб{% else %}вс{% endif %}
+            </div>
             <div class="game-place fw-bold">"{{ game.place }}"</div>
             <div class="game-format">
                 <i class="fas fa-users"></i> {{ game.joined_players.count }} / {{ game.max_players }}
-            </div>
-            <div class="game-time">
-                {{ game.start_time|date:"H:i, d.m" }},
-                {# 0 - воскресенье, 1 - понедельник ... #}
-                {% if game.start_time|date:'w' == '1' %}ПН{% elif game.start_time|date:'w' == '2' %}ВТ{% elif game.start_time|date:'w' == '3' %}СР{% elif game.start_time|date:'w' == '4' %}ЧТ{% elif game.start_time|date:'w' == '5' %}ПТ{% elif game.start_time|date:'w' == '6' %}СБ{% else %}ВС{% endif %}
             </div>
         </div>
         <div class="game-meta text-end">
@@ -27,8 +29,7 @@
                     {% endif %}
                 </div>
             {% endwith %}
-            <a href="{{ game.get_absolute_url }}" class="btn btn-outline-success btn-sm mt-2">Подробнее</a>
         </div>
-    </div>
+    </a>
 {% endfor %}
 
