@@ -7,8 +7,7 @@ class CustomDateTimeInput(TextInput):
         attrs = attrs or {}
         attrs.update({
             'placeholder': 'дд.мм.гггг чч:мм (например: 14.03.2025 13:00)',
-            'class': 'form-control form-control-width',
-            'style': 'background-color: #f8f9fa; border-radius: 5px;',
+            'class': 'form-field',
         })
         super().__init__(attrs)
 

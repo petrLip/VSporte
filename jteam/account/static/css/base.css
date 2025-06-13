@@ -526,18 +526,383 @@ a.follow {
     box-sizing: border-box;
 }
 
-.createGame {
-    margin-bottom: 0px;
-    margin-top: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
+/* Стили для формы создания игры */
+.create-game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
-.createGameButton {
-    margin-bottom: 60px;
-    margin-top: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
+.create-game-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.create-game-header h1 {
+    color: #222;
+    font-size: 2.2em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.create-game-header h1 i {
+    color: #12c064;
+}
+
+.create-game-header .subtitle {
+    color: #666;
+    font-size: 1.1em;
+    margin: 0;
+}
+
+.create-game-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 40px;
+    align-items: start;
+}
+
+.create-game-form-card,
+.create-game-map-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    padding: 32px;
+    border: 1px solid #e8e8e8;
+}
+
+.create-game-map-card h3 {
+    color: #222;
+    font-size: 1.3em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.create-game-map-card h3 i {
+    color: #12c064;
+}
+
+.map-help {
+    color: #666;
+    font-size: 0.95em;
+    margin-bottom: 16px;
+}
+
+#map {
+    width: 100%;
+    height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 12px;
+}
+
+.map-status {
+    text-align: center;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+#map-status-text {
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* Стили формы */
+.game-form {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.form-section {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 24px;
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.form-section h3 {
+    color: #222;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.form-section h3 i {
+    color: #12c064;
+    font-size: 1.1em;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #333;
+    font-size: 0.95em;
+    margin-bottom: 4px;
+}
+
+.form-label i {
+    color: #12c064;
+    font-size: 0.9em;
+}
+
+.required {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.form-help {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 4px;
+}
+
+.form-error {
+    color: #dc3545;
+    font-size: 0.85em;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: #f8d7da;
+    border-radius: 4px;
+    border-left: 3px solid #dc3545;
+}
+
+/* Стили полей ввода */
+.form-field {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e8e8e8;
+    border-radius: 10px;
+    font-size: 0.95em;
+    background: #fafafa;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.form-field:focus {
+    outline: none;
+    border-color: #12c064;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(18, 192, 100, 0.1);
+}
+
+.form-field[type="number"] {
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+.form-field[type="number"]::-webkit-outer-spin-button,
+.form-field[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+textarea.form-field {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+}
+
+.form-field-file {
+    width: 100%;
+    padding: 12px;
+    border: 2px dashed #e8e8e8;
+    border-radius: 10px;
+    background: #fafafa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    font-size: 0.9em;
+}
+
+.form-field-file:hover {
+    border-color: #12c064;
+    background: #f8fff9;
+}
+
+.form-field-file:focus {
+    outline: none;
+    border-color: #12c064;
+    box-shadow: 0 0 0 3px rgba(18, 192, 100, 0.1);
+}
+
+/* Убираем стандартные стили для кастомного поля файла */
+.form-field-file::-webkit-file-upload-button {
+    background: #12c064;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 12px;
+    font-size: 0.9em;
+}
+
+.form-field-file::-webkit-file-upload-button:hover {
+    background: #0fa558;
+}
+
+/* Кнопка отправки */
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.btn-create-game {
+    background: linear-gradient(135deg, #12c064 0%, #0fa558 100%);
+    color: white;
+    border: none;
+    padding: 16px 40px;
+    border-radius: 50px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 16px rgba(18, 192, 100, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-create-game:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(18, 192, 100, 0.4);
+}
+
+.btn-create-game:active {
+    transform: translateY(0);
+}
+
+.required-note {
+    color: #666;
+    font-size: 0.9em;
+    margin: 0;
+    text-align: center;
+}
+
+/* Адаптивность для планшетов */
+@media (max-width: 1024px) {
+    .create-game-wrapper {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .create-game-map-card {
+        order: -1;
+    }
+
+    #map {
+        height: 250px;
+    }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .create-game-container {
+        padding: 16px;
+    }
+
+    .create-game-header h1 {
+        font-size: 1.8em;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .create-game-form-card,
+    .create-game-map-card {
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .game-form {
+        gap: 24px;
+    }
+
+    .form-section {
+        padding-bottom: 16px;
+    }
+
+    .form-section h3 {
+        font-size: 1.1em;
+    }
+
+    #map {
+        height: 200px;
+    }
+
+    .btn-create-game {
+        width: 100%;
+        padding: 14px 32px;
+        font-size: 1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .create-game-header h1 {
+        font-size: 1.6em;
+    }
+
+    .create-game-form-card,
+    .create-game-map-card {
+        padding: 16px;
+    }
+
+    .form-field,
+    .form-field-file {
+        padding: 10px 12px;
+        font-size: 0.9em;
+    }
+
+    .form-label {
+        font-size: 0.9em;
+    }
+
+    .form-section h3 {
+        font-size: 1em;
+    }
 }
 
 #game-list {
@@ -571,21 +936,6 @@ a.follow {
     width: auto;
     padding: 10px;
     text-align: center;
-}
-
-
-.createGame {
-    margin-bottom: 0px;
-    margin-top: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
-}
-
-.createGameButton {
-    margin-bottom: 60px;
-    margin-top: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
 }
 
 /* подчёркнутый тексте */

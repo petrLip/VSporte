@@ -8,22 +8,170 @@
 {% endblock %}
 
 {% block content %}
-    <h1>Создать игру</h1>
-    <p>* Поля со звёздочкой являются обязательными</p>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="createGame">
-            {{ form|crispy }}
+    <div class="create-game-container">
+        <div class="create-game-header">
+            <h1><i class="fas fa-plus-circle"></i> Создать игру</h1>
+            <p class="subtitle">Заполните информацию о предстоящей игре</p>
         </div>
-        <div class="createGameButton">
-            <input class="btn btn-primary" type="submit" value="Создать игру">
+
+        <div class="create-game-wrapper">
+            <!-- Форма создания игры -->
+            <div class="create-game-form-card">
+                <form method="post" enctype="multipart/form-data" class="game-form">
+                    {% csrf_token %}
+                    
+                    <!-- Основная информация -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-info-circle"></i> Основная информация</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="{{ form.sport.id_for_label }}" class="form-label">
+                                    <i class="fas fa-futbol"></i>
+                                    {{ form.sport.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                {{ form.sport }}
+                                {% if form.sport.errors %}
+                                    <div class="form-error">{{ form.sport.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.max_players.id_for_label }}" class="form-label">
+                                    <i class="fas fa-users"></i>
+                                    {{ form.max_players.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                {{ form.max_players }}
+                                {% if form.max_players.errors %}
+                                    <div class="form-error">{{ form.max_players.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Время и продолжительность -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-clock"></i> Время проведения</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="{{ form.start_time.id_for_label }}" class="form-label">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    {{ form.start_time.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                {{ form.start_time }}
+                                <div class="form-help">{{ form.start_time.help_text }}</div>
+                                {% if form.start_time.errors %}
+                                    <div class="form-error">{{ form.start_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.duration.id_for_label }}" class="form-label">
+                                    <i class="fas fa-hourglass-half"></i>
+                                    {{ form.duration.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                {{ form.duration }}
+                                <div class="form-help">{{ form.duration.help_text }}</div>
+                                {% if form.duration.errors %}
+                                    <div class="form-error">{{ form.duration.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Место и стоимость -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-map-marker-alt"></i> Место и стоимость</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="{{ form.place.id_for_label }}" class="form-label">
+                                    <i class="fas fa-location-dot"></i>
+                                    {{ form.place.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                {{ form.place }}
+                                <div class="form-help">Укажите адрес или название места</div>
+                                {% if form.place.errors %}
+                                    <div class="form-error">{{ form.place.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.price.id_for_label }}" class="form-label">
+                                    <i class="fas fa-ruble-sign"></i>
+                                    {{ form.price.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                {{ form.price }}
+                                <div class="form-help">Стоимость участия в рублях</div>
+                                {% if form.price.errors %}
+                                    <div class="form-error">{{ form.price.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Дополнительная информация -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-edit"></i> Дополнительная информация</h3>
+                        <div class="form-group full-width">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left"></i>
+                                {{ form.description.label }}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="form-error">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="{{ form.image.id_for_label }}" class="form-label">
+                                <i class="fas fa-camera"></i>
+                                {{ form.image.label }}
+                            </label>
+                            {{ form.image }}
+                            <div class="form-help">Загрузите обложку для игры (необязательно)</div>
+                            {% if form.image.errors %}
+                                <div class="form-error">{{ form.image.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Скрытые поля для координат -->
+                    {{ form.latitude }}
+                    {{ form.longitude }}
+
+                    <!-- Кнопка отправки -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn-create-game">
+                            <i class="fas fa-plus"></i>
+                            Создать игру
+                        </button>
+                        <p class="required-note">
+                            <span class="required">*</span> — обязательные поля
+                        </p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Карта -->
+            <div class="create-game-map-card">
+                <h3><i class="fas fa-map"></i> Выберите место на карте</h3>
+                <p class="map-help">Кликните на карте, чтобы указать точное местоположение игры</p>
+                <div id="map"></div>
+                <div class="map-status">
+                    <span id="map-status-text">Место не выбрано</span>
+                </div>
+            </div>
         </div>
-    </form>
-    <div id="map" style="width: 600px; height: 400px; margin-top: 20px;"></div>
-    
+    </div>
 {% endblock %}
 
 {% block extra_scripts %}
-    <!-- Подключаем наш модульный скрипт с картой -->
-    <script type="module" src="{% static 'js/yandex_map.js' %}"></script>
+    <!-- Подключаем наш скрипт с картой -->
+    <script src="{% static 'js/yandex_map.js' %}"></script>
 {% endblock %}

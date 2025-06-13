@@ -29,12 +29,7 @@ class GameCreateForm(forms.ModelForm):
         label="Продолжительность",
         help_text="Длительность игры в часах",
         choices=DURATION_CHOICES,
-        widget=Select(
-            attrs={
-                "class": "form-control form-control-width",
-                "style": "background-color: #f8f9fa; border-radius: 5px;",
-            }
-        )
+        widget=Select()
     )
 
     # Добавляем скрытые поля для координат
@@ -65,50 +60,34 @@ class GameCreateForm(forms.ModelForm):
         }
 
         widgets = {
-            "sport": Select(
-                attrs={
-                    "class": "form-control form-control-width",
-                    "style": "background-color: #f8f9fa; border-radius: 5px;",
-                }
-            ),
-            "place": TextInput(
-                attrs={
-                    "class": "form-control form-control-width",
-                    "style": "background-color: #f8f9fa; border-radius: 5px;",
-                }
-            ),
-            "max_players": NumberInput(
-                attrs={
-                    "class": "form-control form-control-width",
-                    "step": "1",
-                    "min": "2",  # Минимум 2 игрока
-                    "style": "background-color: #f8f9fa; border-radius: 5px;",
-                }
-            ),
-            "description": Textarea(
-                attrs={
-                    "cols": 30,
-                    "rows": 3,
-                    "class": "form-control form-control-width",
-                    "type": "text",
-                    "placeholder": "Опишите например: есть душевые, есть парковочные места",
-                    "aria-label": "default input example",
-                    "style": "background-color: #f8f9fa; border-radius: 5px;",
-                }
-            ),
-            "price": NumberInput(
-                attrs={
-                    "step": "10",
-                    "class": "form-control form-control-width",
-                    "style": "background-color: #f8f9fa; border-radius: 5px;",
-                }
-            ),
-            "image": ClearableFileInput(
-                attrs={
-                    "class": "form-control form-control-width",
-                    "style": "background-color: #f8f9fa; border-radius: 5px;",
-                }
-            ),
+            "sport": Select(attrs={
+                "class": "form-field",
+            }),
+            "place": TextInput(attrs={
+                "class": "form-field",
+                "placeholder": "Укажите адрес или название места"
+            }),
+            "max_players": NumberInput(attrs={
+                "class": "form-field",
+                "step": "1",
+                "min": "2",  # Минимум 2 игрока
+                "placeholder": "2"
+            }),
+            "description": Textarea(attrs={
+                "class": "form-field",
+                "rows": 4,
+                "placeholder": "Опишите игру: есть ли душевые, парковочные места, особенности площадки..."
+            }),
+            "price": NumberInput(attrs={
+                "class": "form-field",
+                "step": "10",
+                "min": "0",
+                "placeholder": "0"
+            }),
+            "image": ClearableFileInput(attrs={
+                "class": "form-field-file",
+                "accept": "image/*"
+            }),
         }
 
     def clean_start_time(self):
