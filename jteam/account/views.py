@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -29,11 +29,12 @@ def user_login(request):
             if user is not None:
                 if user.is_active:
                     login(request, user)
-                    return HttpResponse("Authenticated successfully")
+                    messages.success(request, f"Добро пожаловать, {user.username}!")
+                    return redirect("dashboard")
                 else:
-                    return HttpResponse("Disabled account")
+                    messages.error(request, "Аккаунт отключен")
             else:
-                return HttpResponse("Invalid login")
+                messages.error(request, "Неверный логин или пароль")
     else:
         form = LoginForm()
     return render(request, "account/login.html", {"form": form})

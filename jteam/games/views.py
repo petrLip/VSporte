@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 from actions.utils import create_action
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models.functions import Greatest
+from django.db.models import Case, When, IntegerField
 import logging
 from easy_thumbnails.files import get_thumbnailer
 
@@ -98,6 +99,17 @@ def game_list(request):
     games = Game.objects.all()
     form = GameFilterForm(request.GET)
     
+    # Сортировка по статусу: Open -> Started -> Finished
+    games = games.annotate(
+        status_priority=Case(
+            When(status='open', then=1),
+            When(status='started', then=2),
+            When(status='finished', then=3),
+            default=4,
+            output_field=IntegerField(),
+        )
+    ).order_by('status_priority', 'start_time')
+    
     if form.is_valid():
         sport = form.cleaned_data.get('sport')
         search = form.cleaned_data.get('search')
@@ -116,7 +128,7 @@ def game_list(request):
                     'similarity_first_name',
                     'similarity_last_name'
                 )
-            ).filter(similarity__gt=0.1).order_by('-similarity')
+            ).filter(similarity__gt=0.1).order_by('status_priority', '-similarity')
 
     # Пагинация
     paginator = Paginator(games, 12)
