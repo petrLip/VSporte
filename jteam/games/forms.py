@@ -20,14 +20,18 @@ class GameCreateForm(forms.ModelForm):
         widget=CustomDateTimeInput()
     )
 
-    # Переопределяем поле duration как строковое
-    duration = forms.CharField(
+    # Поле выбора продолжительности игры с шагом 30 минут
+    DURATION_CHOICES = [
+        (str(x / 2), str(x / 2)) for x in range(1, 41)
+    ]  # от 0.5 до 20 часов
+
+    duration = forms.ChoiceField(
         label="Продолжительность",
-        help_text="Формат: чч:мм (например: 01:30 для 1 часа 30 минут)",
-        widget=TextInput(
+        help_text="Длительность игры в часах",
+        choices=DURATION_CHOICES,
+        widget=Select(
             attrs={
                 "class": "form-control form-control-width",
-                "placeholder": "Например: 01:30",
                 "style": "background-color: #f8f9fa; border-radius: 5px;",
             }
         )
@@ -125,24 +129,22 @@ class GameCreateForm(forms.ModelForm):
         return start_time
 
     def clean_duration(self):
-        """Преобразование строки продолжительности в timedelta"""
+        """Преобразование выбранного значения продолжительности в timedelta"""
         duration = self.cleaned_data.get('duration')
         if duration:
             try:
-                # Разбиваем строку на часы и минуты
-                hours, minutes = map(int, duration.split(':'))
-                if hours < 0 or minutes < 0 or minutes >= 60:
+                hours = float(duration)
+                if hours <= 0:
                     raise ValidationError("Неверный формат продолжительности")
 
-                total_duration = timedelta(hours=hours, minutes=minutes)
+                total_duration = timedelta(hours=hours)
 
-                # Проверка на максимальную продолжительность (20 часов)
                 if total_duration > timedelta(hours=20):
                     raise ValidationError("Продолжительность игры не может превышать 20 часов.")
 
                 return total_duration
             except ValueError:
-                raise ValidationError("Укажите продолжительность в формате ЧЧ:ММ (например: 01:30)")
+                raise ValidationError("Укажите продолжительность в часах")
         return duration
 
 
