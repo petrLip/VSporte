@@ -1,11 +1,82 @@
 {% extends "base.html" %}
 
-{% block title %}Welcome{% endblock %}
+{% block title %}Добро пожаловать{% endblock %}
 
 {% block content %}
-  <h1>Welcome {{ new_user.first_name }}!</h1>
-  <p>
-    Your account has been successfully created.
-    Now you can <a href="{% url 'login' %}">log in</a>.
-  </p>
+<style>
+    .success-container {
+        max-width: 450px;
+        margin: 50px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .success-title {
+        font-size: 28px;
+        font-weight: bold;
+        color: #4CAF50;
+        margin-bottom: 20px;
+    }
+    
+    .success-message {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    
+    .success-btn {
+        display: inline-block;
+        padding: 15px 30px;
+        background: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background 0.3s ease;
+    }
+    
+    .success-btn:hover {
+        background: #45a049;
+        text-decoration: none;
+        color: white;
+    }
+    
+    .checkmark {
+        font-size: 48px;
+        color: #4CAF50;
+        margin-bottom: 20px;
+    }
+    
+    /* Мобильная адаптивность */
+    @media (max-width: 480px) {
+        .success-container {
+            margin: 20px auto;
+            padding: 30px 20px;
+            max-width: 90%;
+        }
+        
+        .success-title {
+            font-size: 24px;
+        }
+        
+        .checkmark {
+            font-size: 36px;
+        }
+    }
+</style>
+
+<div class="success-container">
+    <div class="checkmark">✓</div>
+    <h1 class="success-title">Добро пожаловать, {{ new_user.first_name }}!</h1>
+    <p class="success-message">
+        Ваш аккаунт успешно создан!<br>
+        Теперь вы можете войти в систему, используя свои данные.
+    </p>
+    <a href="{% url 'login' %}" class="success-btn">Войти в систему</a>
+</div>
 {% endblock %}

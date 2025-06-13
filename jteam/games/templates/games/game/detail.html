@@ -30,15 +30,12 @@
   </div>
 
   <p>{{ game.user.username }} – {{ game.user.email }}</p>
-  <p>
-    <i class="fas fa-calendar"></i> {{ game.date }}&nbsp;&nbsp;&nbsp;
-    <i class="fas fa-clock"></i> {{ game.start_time }}&nbsp;&nbsp;&nbsp;
-    <i class="fas fa-map-marker"></i> {{ game.place }}
-  </p>
+  <p><i class="fas fa-calendar"></i> {{ game.start_time }}&nbsp;&nbsp;&nbsp;</p>
+  <p><i class="fas fa-map-marker"></i> {{ game.place }}&nbsp;&nbsp;&nbsp;</p>
 
   <div id="map" style="width: 25%; height: 200px; margin-top: 20px;"></div>
 
-  <p><strong>Status:</strong> {{ game.get_status_display }}</p>
+  <p><strong>Статус:</strong> {{ game.get_status_display }}</p>
   <p>{{ game.description }}</p>
   <p><i class="fas fa-coins"></i> {{ game.price }}</p>
 
@@ -56,10 +53,10 @@
     </div>
   </div>
 
-  {# --- кнопка присоединения (теперь единственная) --- #}
+  {# --- кнопка присоединения  --- #}
   {% if game.status == 'open' %}
     <button id="join-btn"
-            class="button like"
+            class="button"
             data-id="{{ game.id }}"
             data-action="{% if request.user in game.joined_players.all %}leave{% else %}join{% endif %}">
       {% if request.user in game.joined_players.all %}Покинуть игру{% else %}Присоединиться{% endif %}
