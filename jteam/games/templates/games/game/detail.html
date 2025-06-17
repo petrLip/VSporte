@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load thumbnail %}
+{% load l10n %}
 
 {% block title %}{{ game.sport }} | {{ user.username }}{% endblock %}
 {% block extra_head %}
@@ -7,98 +8,704 @@
 {% endblock %}
 
 {% block content %}
-  <div class="game-header">
-    <h1>{{ game.get_sport_display }}
-      {% if game.image %}
-        {% thumbnail game.image "100x100" crop="100%" as cover %}
-          <img src="{{ cover.url }}" class="item-img">
-        {% endif %}
-    </h1>
+<style>
+    .game-detail-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 0 20px;
+    }
+    
+    .game-detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .game-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+    
+    .game-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+    
+    .game-title {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 28px;
+        font-weight: bold;
+        color: #333;
+        margin: 0;
+    }
+    
+    .game-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #4CAF50;
+    }
+    
+    .game-actions {
+        margin-left: 20px;
+    }
+    
+    .btn-danger {
+        background: #dc3545 !important;
+        color: white !important;
+        border: none !important;
+        padding: 10px 20px !important;
+        border-radius: 25px !important;
+        font-size: 14px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        text-transform: none !important;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333 !important;
+        transform: translateY(-2px);
+    }
+    
+    .game-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        font-size: 16px;
+    }
+    
+    .info-item i {
+        color: #4CAF50;
+        font-size: 18px;
+        width: 20px;
+    }
+    
+    .info-item strong {
+        color: #333;
+    }
+    
+    .organizer-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+    }
+    
+    .organizer-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #4CAF50;
+    }
+    
+    .organizer-avatar-placeholder {
+        background: #4CAF50;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    .organizer-link {
+        color: #4CAF50;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+    
+    .organizer-link:hover {
+        color: #45a049;
+        text-decoration: underline;
+    }
+    
+    .organizer-contact {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 15px;
+        padding: 20px;
+        margin: 20px 0;
+        border-left: 4px solid #4CAF50;
+        text-align: center;
+    }
+    
+    .contact-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .contact-title i {
+        color: #4CAF50;
+        font-size: 20px;
+    }
+    
+    .contact-content {
+        margin-top: 15px;
+    }
+    
+    .contact-email {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: white;
+        color: #4CAF50;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 16px;
+        padding: 12px 20px;
+        border-radius: 25px;
+        border: 2px solid #4CAF50;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(76, 175, 80, 0.1);
+    }
+    
+    .contact-email:hover {
+        background: #4CAF50;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
+    }
+    
+    .contact-email i {
+        font-size: 14px;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .status-open {
+        background: #d4edda;
+        color: #155724;
+        border: 2px solid #4CAF50;
+    }
+    
+    .status-started {
+        background: #fff3cd;
+        color: #856404;
+        border: 2px solid #ffc107;
+    }
+    
+    .status-finished {
+        background: #f8d7da;
+        color: #721c24;
+        border: 2px solid #dc3545;
+    }
+    
+    .game-description {
+        background: #f8f9fa;
+        border-left: 4px solid #4CAF50;
+        padding: 20px;
+        border-radius: 0 10px 10px 0;
+        margin: 20px 0;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    
+    .price-section {
+        text-align: center;
+        padding: 20px;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+        border-radius: 15px;
+        margin: 20px 0;
+    }
+    
+    .price-amount {
+        font-size: 32px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .map-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 20px;
+        height: fit-content;
+    }
+    
+    .map-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    #map {
+        width: 100%;
+        height: 250px;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stats-section {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 25px;
+        margin: 20px 0;
+    }
+    
+    .stats-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        border-color: #4CAF50;
+        transform: translateY(-2px);
+    }
+    
+    .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #4CAF50;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .join-section {
+        text-align: center;
+        margin: 25px 0;
+    }
+    
+    .join-btn {
+        background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+        color: white !important;
+        border: none !important;
+        padding: 15px 40px !important;
+        border-radius: 25px !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        text-transform: none !important;
+        text-decoration: none !important;
+    }
+    
+    .join-btn:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4) !important;
+        color: white !important;
+        text-decoration: none !important;
+    }
+    
+    .leave-btn {
+        background: linear-gradient(135deg, #dc3545, #c82333) !important;
+    }
+    
+    .leave-btn:hover {
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4) !important;
+    }
+    
+    .status-message {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        padding: 15px 20px;
+        border-radius: 10px;
+        text-align: center;
+        font-weight: bold;
+        margin: 20px 0;
+    }
+    
+    .players-section {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 25px;
+    }
+    
+    .players-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .players-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .player-card {
+        text-align: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .player-card:hover {
+        border-color: #4CAF50;
+        background: white;
+        transform: translateY(-2px);
+    }
+    
+    .player-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #4CAF50;
+        margin-bottom: 10px;
+    }
+    
+    .player-username {
+        color: #333;
+        font-weight: bold;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    
+    .player-username:hover {
+        color: #4CAF50;
+        text-decoration: none;
+    }
+    
+    .empty-players {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        padding: 40px 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    /* Мобильная адаптивность */
+    @media (max-width: 992px) {
+        .game-detail-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .game-info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .game-detail-container {
+            padding: 0 10px;
+        }
+        
+        .game-card {
+            padding: 20px;
+        }
+        
+        .game-header {
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .game-title {
+            font-size: 24px;
+        }
+        
+        .players-grid {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        }
+        
+        .price-amount {
+            font-size: 24px;
+        }
+    }
+</style>
 
-    {% if request.user == game.user and game.status == 'open' %}
-      <div class="game-actions">
-        <form action="{% url 'games:delete' game.id %}" method="post">
-          {% csrf_token %}
-          <button type="submit"
-                  class="btn btn-danger"
-                  onclick="return confirm('Вы уверены, что хотите удалить эту игру?')">
-            <i class="fas fa-trash"></i> Удалить игру
-          </button>
-        </form>
-      </div>
-    {% endif %}
-  </div>
-
-  <p>{{ game.user.username }} – {{ game.user.email }}</p>
-  <p><i class="fas fa-calendar"></i> {{ game.start_time }}&nbsp;&nbsp;&nbsp;</p>
-  <p><i class="fas fa-map-marker"></i> {{ game.place }}&nbsp;&nbsp;&nbsp;</p>
-
-  <div id="map" style="width: 25%; height: 200px; margin-top: 20px;"></div>
-
-  <p><strong>Статус:</strong> {{ game.get_status_display }}</p>
-  <p>{{ game.description }}</p>
-  <p><i class="fas fa-coins"></i> {{ game.price }}</p>
-
-  {# --- статистика игроков --- #}
-  <div class="game-stats-container">
-    <div class="game-stats">
-      <p>
-        <i class="fas fa-users"></i>
-        <span class="count">{{ game.joined_players.count }} / {{ game.max_players }}</span>
-      </p>
-      <p>
-        <i class="fas fa-eye"></i>
-        <span class="count">{{ total_views }} view{{ total_views|pluralize }}</span>
-      </p>
+<div class="game-detail-container">
+    <div class="game-detail-grid">
+        <!-- Основная информация об игре -->
+        <div class="main-content">
+            <div class="game-card">
+                <div class="game-header">
+                    <h1 class="game-title">
+                        {{ game.get_sport_display }}
+                        {% if game.image %}
+                            {% thumbnail game.image "100x100" crop="100%" as cover %}
+                            <img src="{{ cover.url }}" class="game-image" alt="{{ game.sport }}">
+                        {% endif %}
+                    </h1>
+                    
+                    {% if request.user == game.user and game.status == 'open' %}
+                        <div class="game-actions">
+                            <form action="{% url 'games:delete' game.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="btn-danger"
+                                        onclick="return confirm('Вы уверены, что хотите удалить эту игру?')">
+                                    <i class="fas fa-trash"></i> Удалить игру
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="game-info-grid">
+                    <div class="info-item">
+                        <i class="fas fa-user"></i>
+                        <span><strong>Организатор:</strong> 
+                            <div class="organizer-info">
+                                {% if game.user.profile.photo %}
+                                    {% thumbnail game.user.profile.photo "40x40" crop="100%" as organizer_avatar %}
+                                    <img src="{{ organizer_avatar.url }}" alt="{{ game.user.username }}" class="organizer-avatar">
+                                {% else %}
+                                    <div class="organizer-avatar organizer-avatar-placeholder">
+                                        {{ game.user.username.0|upper }}
+                                    </div>
+                                {% endif %}
+                                <a href="{{ game.user.get_absolute_url }}" class="organizer-link">{{ game.user.username }}</a>
+                            </div>
+                        </span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-calendar"></i>
+                        <span><strong>Время:</strong> {{ game.start_time }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span><strong>Продолжительность:</strong> {{ game.get_formatted_duration }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span><strong>Место:</strong> {{ game.place }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-flag"></i>
+                        <span><strong>Статус:</strong> 
+                            <span class="status-badge status-{{ game.status }}">
+                                {{ game.get_status_display }}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+                
+                {% if game.description %}
+                    <div class="game-description">
+                        <strong>Описание:</strong><br>
+                        {{ game.description }}
+                    </div>
+                {% endif %}
+                
+                <!-- Контакт организатора -->
+                {% if game.user.email %}
+                    <div class="organizer-contact">
+                        <div class="contact-title">
+                            <i class="fas fa-envelope"></i>
+                            Связаться с организатором
+                        </div>
+                        <div class="contact-content">
+                            <a href="mailto:{{ game.user.email }}" class="contact-email">
+                                <i class="fas fa-paper-plane"></i>
+                                {{ game.user.email }}
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="price-section">
+                    <i class="fas fa-coins" style="font-size: 24px;"></i>
+                    <div class="price-amount">{{ game.price }} ₽</div>
+                    <div>за участие в игре</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Карта -->
+        <div class="side-content">
+            <div class="map-card">
+                <div class="map-title">
+                    <i class="fas fa-map"></i>
+                    Местоположение
+                </div>
+                <div id="map"></div>
+            </div>
+        </div>
     </div>
-  </div>
-
-  {# --- кнопка присоединения  --- #}
-  {% if game.status == 'open' %}
-    <button id="join-btn"
-            class="button"
-            data-id="{{ game.id }}"
-            data-action="{% if request.user in game.joined_players.all %}leave{% else %}join{% endif %}">
-      {% if request.user in game.joined_players.all %}Покинуть игру{% else %}Присоединиться{% endif %}
-    </button>
-  {% else %}
-    <p class="game-status-message">
-      {% if game.status == 'started' %}Игра уже началась{% elif game.status == 'finished' %}Игра уже закончилась{% endif %}
-    </p>
-  {% endif %}
-
-  {# --- аватарки игроков --- #}
-  <div id="players-list">
-    {% for p in game.joined_players.all %}
-      <div class="player">
-        {% if p.profile.photo %}
-          {% thumbnail p.profile.photo "player_avatar" as im %}
-            <a href="{{ p.get_absolute_url }}">
-              <img src="{{ im.url }}" alt="{{ p.username }}" class="player-avatar">
-            </a>
-        {% endif %}
-        <a href="{{ p.get_absolute_url }}" class="player-username">{{ p.username }}</a>
-      </div>
-    {% empty %}
-      <p>Пока нет игроков</p>
-    {% endfor %}
-  </div>
+    
+    <!-- Статистика и присоединение -->
+    <div class="stats-section">
+        <div class="stats-title">
+            <i class="fas fa-chart-bar"></i>
+            Статистика игры
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">{{ game.joined_players.count }} / {{ game.max_players }}</div>
+                <div class="stat-label">Игроки</div>
+            </div>
+            
+            <div class="stat-item">
+                <div class="stat-number">{{ total_views }}</div>
+                <div class="stat-label">Просмотров</div>
+            </div>
+        </div>
+        
+        <div class="join-section">
+            {% if game.status == 'open' %}
+                <button id="join-btn"
+                        class="join-btn {% if request.user in game.joined_players.all %}leave-btn{% endif %}"
+                        data-id="{{ game.id }}"
+                        data-action="{% if request.user in game.joined_players.all %}leave{% else %}join{% endif %}">
+                    {% if request.user in game.joined_players.all %}
+                        <i class="fas fa-sign-out-alt"></i> Покинуть игру
+                    {% else %}
+                        <i class="fas fa-play"></i> Присоединиться
+                    {% endif %}
+                </button>
+            {% else %}
+                <div class="status-message">
+                    {% if game.status == 'started' %}
+                        <i class="fas fa-clock"></i> Игра уже началась
+                    {% elif game.status == 'finished' %}
+                        <i class="fas fa-flag-checkered"></i> Игра уже закончилась
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Список игроков -->
+    <div class="players-section">
+        <div class="players-title">
+            <i class="fas fa-users"></i>
+            Участники игры
+        </div>
+        
+        <div id="players-list">
+            {% if game.joined_players.exists %}
+                <div class="players-grid">
+                    {% for p in game.joined_players.all %}
+                        <div class="player-card">
+                            {% if p.profile.photo %}
+                                {% thumbnail p.profile.photo "player_avatar" as im %}
+                                <a href="{{ p.get_absolute_url }}">
+                                    <img src="{{ im.url }}" alt="{{ p.username }}" class="player-avatar">
+                                </a>
+                            {% else %}
+                                <div class="player-avatar" style="background: #4CAF50; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold;">
+                                    {{ p.username.0|upper }}
+                                </div>
+                            {% endif %}
+                            <a href="{{ p.get_absolute_url }}" class="player-username">{{ p.username }}</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-players">
+                    <i class="fas fa-user-plus" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i><br>
+                    Пока нет игроков. Будьте первым!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-  /* === карта (без изменений) === */
+  /* === карта === */
   document.addEventListener('DOMContentLoaded', function () {
     ymaps.ready(function () {
       {% if game.latitude and game.longitude %}
-        const lat = parseFloat("{{ game.latitude|floatformat:'6'|stringformat:'s' }}".replace(',', '.'));
-        const lng = parseFloat("{{ game.longitude|floatformat:'6'|stringformat:'s' }}".replace(',', '.'));
+        // Более простое и надежное форматирование координат
+        const lat = {{ game.latitude|unlocalize }};
+        const lng = {{ game.longitude|unlocalize }};
+        console.log('Загружаю карту с координатами:', lat, lng);
       {% else %}
         const lat = 55.76, lng = 37.64;  // центр Москвы
+        console.log('Координаты игры не найдены, используем центр Москвы');
       {% endif %}
 
-      const map = new ymaps.Map('map', {center: [lat, lng], zoom: 17, controls: ['zoomControl']});
-      map.geoObjects.add(new ymaps.Placemark([lat, lng], {balloonContent: '{{ game.place|escapejs }}'}));
+      const map = new ymaps.Map('map', {
+        center: [lat, lng], 
+        zoom: 17, 
+        controls: ['zoomControl']
+      });
+      
+      const placemark = new ymaps.Placemark([lat, lng], {
+        balloonContent: '{{ game.place|escapejs }}'
+      }, {
+        preset: 'islands#greenDotIcon'
+      });
+      
+      map.geoObjects.add(placemark);
     });
   });
 
@@ -107,16 +714,16 @@
     if (e.target?.id !== 'join-btn') return;
 
     e.preventDefault();
-    const btn    = e.target;
+    const btn = e.target;
     const action = btn.dataset.action;
 
     const body = new FormData();
-    body.append('id',   btn.dataset.id);
+    body.append('id', btn.dataset.id);
     body.append('action', action);
 
     const rsp = await fetch('{% url "games:join" %}', {
       method: 'POST',
-      mode:   'same-origin',
+      mode: 'same-origin',
       headers: {'X-CSRFToken': csrftoken},
       body
     });
@@ -124,28 +731,46 @@
     const data = await rsp.json();
     if (data.status !== 'ok') { alert(data.message); return; }
 
-    /* --- 1. Обновляем счётчик в .game-stats --- */
-    const stats = document.querySelector('.game-stats .count');
-    if (stats) stats.textContent = `${data.players_count} / {{ game.max_players }}`;
+    /* --- 1. Обновляем счётчик в статистике --- */
+    const statsNumber = document.querySelector('.stat-item .stat-number');
+    if (statsNumber) statsNumber.textContent = `${data.players_count} / {{ game.max_players }}`;
 
     /* --- 2. Перерисовываем список игроков --- */
     const list = document.getElementById('players-list');
     list.innerHTML = '';
-    data.players.forEach(p => {
-      list.insertAdjacentHTML('beforeend', `
-        <div class="player">
-          ${p.photo ? `<img src="${p.photo}" alt="${p.username}" class="player-avatar">` : ''}
-          <span class="player-username">${p.username}</span>
-        </div>`);
-    });
+    
+    if (data.players.length > 0) {
+      list.innerHTML = '<div class="players-grid"></div>';
+      const grid = list.querySelector('.players-grid');
+      
+      data.players.forEach(p => {
+        const avatar = p.photo ? 
+          `<img src="${p.photo}" alt="${p.username}" class="player-avatar">` :
+          `<div class="player-avatar" style="background: #4CAF50; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold;">${p.username.charAt(0).toUpperCase()}</div>`;
+        
+        grid.insertAdjacentHTML('beforeend', `
+          <div class="player-card">
+            ${avatar}
+            <a href="#" class="player-username">${p.username}</a>
+          </div>`);
+      });
+    } else {
+      list.innerHTML = `
+        <div class="empty-players">
+          <i class="fas fa-user-plus" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i><br>
+          Пока нет игроков. Будьте первым!
+        </div>`;
+    }
 
     /* --- 3. Меняем состояние кнопки --- */
     if (action === 'join') {
       btn.dataset.action = 'leave';
-      btn.textContent = 'Покинуть игру';
+      btn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Покинуть игру';
+      btn.classList.add('leave-btn');
     } else {
       btn.dataset.action = 'join';
-      btn.textContent = 'Присоединиться';
+      btn.innerHTML = '<i class="fas fa-play"></i> Присоединиться';
+      btn.classList.remove('leave-btn');
     }
   });
 </script>
