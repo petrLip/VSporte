@@ -123,6 +123,24 @@ class Game(models.Model):
         """Возвращает URL-адрес страницы детального отображения игры."""
         return reverse("games:detail", args=[self.pk, self.slug])
 
+    def get_formatted_duration(self):
+        """Возвращает продолжительность игры в читаемом формате (например, '2 ч 30 мин')."""
+        if not self.duration:
+            return "Не указано"
+        
+        # Получаем общее количество секунд из timedelta объекта
+        total_seconds = int(self.duration.total_seconds())
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        
+        result = []
+        if hours > 0:
+            result.append(f"{hours} ч")
+        if minutes > 0:
+            result.append(f"{minutes} мин")
+        
+        return " ".join(result) if result else "0 мин"
+
     # ...Можно добавить проверку на существование игры перед генерацией URL-адреса.
 
     # models.py:
