@@ -5,15 +5,9 @@ from dotenv import load_dotenv
 
 from django.urls import reverse_lazy
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("SECRET_KEY")
-
-DEBUG = True
-THUMBNAIL_DEBUG = True
-
-# ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
-ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # app
@@ -225,36 +219,57 @@ THUMBNAIL_ALIASES = {
     },
 }
 
-
 # Настройки логирования
+
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    # ---------- форматтеры ----------
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} {levelname:<8} {name}:{lineno} {message}",
+            "style": "{",
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
+        "simple": {"format": "{levelname:<8} {message}", "style": "{"},
+    },
+    # ---------- обработчики ----------
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",          # лаконичнее при разработке
+            "level": "DEBUG",               # всегда подробно в терминал
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "django.log",
+            "formatter": "verbose",
+            "level": "INFO",                # в файл — только INFO+
+            "maxBytes": 5 * 1024 * 1024,    # 5 MB
+            "backupCount": 5,               # хранить 5 архивов
+            "encoding": "utf-8",
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+    # ---------- корневой логгер ----------
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",                    # DEBUG включаем точечно
+    },
+    # ---------- логгеры приложений ----------
+    "loggers": {
+        # примеры: при разработке можно временно поднять уровень
+        # конкретному приложению, не задевая все остальные.
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "WARNING",             # убирает SQL-трасс в консоли
+            "propagate": False,
         },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'games': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': True,
+        "games": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
         },
     },
 }

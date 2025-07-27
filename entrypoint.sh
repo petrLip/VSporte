@@ -8,7 +8,7 @@ done
 echo "Database is available"
 
 # Проверяем, нужно ли выполнять миграции
-python manage.py showmigrations --plan | grep -q "[ ]"
+python manage.py showmigrations --plan | grep -q "\[ \]"
 if [ $? -eq 0 ]; then
     echo "Running migrations..."
     python manage.py migrate

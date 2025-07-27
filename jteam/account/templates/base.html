@@ -13,9 +13,7 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="shortcut icon" href="{% static 'image/jpeg/logo_jteam_ico.ico' %}" type="image/x-icon"/>
     <!-- icons with fontawesomefree -->
-    <script src="{% static 'fontawesomefree/js/fontawesome.js' %}"></script>
-    <script src="{% static 'fontawesomefree/js/solid.js' %}"></script>
-    <script src="{% static 'fontawesomefree/js/brands.js' %}"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css">
     <!-- end icons with fontawesomefree -->
      
     {% block extra_head %}{% endblock %}
@@ -90,22 +88,6 @@
         </ul>
     {% endif %}
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
-
-    <!-- скрипт для закладки картинки с других сайтов -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var closeButtons = document.querySelectorAll('.close');
-
-        closeButtons.forEach(function(button) {
-            button.addEventListener('click', function(event) {
-                event.preventDefault();
-                var message = this.parentNode;
-                message.style.display = 'none';
-            });
-        });
-    });
-    </script>
-
     <script src="//cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
     <!-- Загрузка JavaScript в DOM -->
     <script>

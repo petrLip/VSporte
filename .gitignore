@@ -179,6 +179,7 @@ cython_debug/
 
 # Медиа-файлы (если они генерируются и не нужны в репозитории)
 /jteam/media/
+media/
 
 /jteam/locale/en/LC_MESSAGES/django.po
 
@@ -193,6 +194,10 @@ jteam/db.sqlite3
 
 # Исключить файлы debug_toolbar
 /static/debug_toolbar/
+/account/static/debug_toolbar
+/static_root/
+/staticfiles/
+/static/
 
 # Исключить файлы bootstrap
 /static/bootstrap/
