@@ -5,10 +5,9 @@ class CustomDateTimeInput(TextInput):
     """Кастомный виджет для ввода даты и времени в формате dd.mm.yyyy HH:MM"""
     def __init__(self, attrs=None):
         attrs = attrs or {}
-        attrs.update({
-            'placeholder': 'дд.мм.гггг чч:мм (например: 14.03.2025 13:00)',
-            'class': 'form-field',
-        })
+        existing_class = attrs.get('class', '').strip()
+        attrs['placeholder'] = 'дд.мм.гггг чч:мм (например: 14.03.2025 13:00)'
+        attrs['class'] = f"form-field {existing_class}".strip()
         super().__init__(attrs)
 
     def format_value(self, value):

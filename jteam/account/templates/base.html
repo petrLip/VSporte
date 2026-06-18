@@ -18,7 +18,7 @@
      
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body{% block body_class %}{% endblock %}>
     <div id="header">
         <span class="logo"><a href="{% url 'dashboard' %}">JTeam</a></span>
 
@@ -56,6 +56,14 @@
         <span class="user">
             {% if request.user.is_authenticated %}
                 <div class="user-info">
+                    <button type="button"
+                            class="user-city-trigger header-city"
+                            data-city-trigger
+                            aria-haspopup="dialog"
+                            aria-controls="user-city-picker">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span data-city-label>Определяем город...</span>
+                    </button>
                     <span id="user-local-time" class="mini-local-time">Определение местного времени...</span>
                     {% if request.user.profile.photo %}
                         <a href="{{ user.get_absolute_url }}">
@@ -104,7 +112,42 @@
         {% endblock %}
     </div>
 
+    {% if request.user.is_authenticated %}
+        {{ cities|json_script:"user-cities-data" }}
+        <div id="user-city-config"
+             hidden
+             data-detect-url="{% url 'location:api_detect_city' %}"
+             data-set-city-url="{% url 'location:api_set_city' %}"
+             data-search-url="{% url 'location:api_cities' %}"></div>
+        <div class="user-city-picker" id="user-city-picker" hidden>
+            <div class="user-city-picker__backdrop" data-city-picker-close></div>
+            <div class="user-city-picker__panel" role="dialog" aria-modal="true" aria-labelledby="user-city-picker-title">
+                <div class="user-city-picker__header">
+                    <h2 id="user-city-picker-title">Выберите город</h2>
+                    <button type="button" class="user-city-picker__close" data-city-picker-close aria-label="Закрыть">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="user-city-picker__hint">
+                    Введите минимум 2 символа и выберите город из списка.
+                </p>
+                <div class="user-city-picker__search">
+                    <input type="search"
+                           id="user-city-search"
+                           class="user-city-picker__input"
+                           placeholder="Например, Са..."
+                           autocomplete="off"
+                           aria-controls="user-city-list"
+                           aria-expanded="false">
+                </div>
+                <p class="user-city-picker__empty" id="user-city-search-hint">Начните вводить название города</p>
+                <div class="user-city-picker__list" id="user-city-list" role="listbox" hidden></div>
+            </div>
+        </div>
+    {% endif %}
+
     {% block extra_scripts %}{% endblock %}
+    <script src="{% static 'js/user_city.js' %}"></script>
     <script src="{% static 'js/local_time.js' %}"></script>
 </body>
 </html>

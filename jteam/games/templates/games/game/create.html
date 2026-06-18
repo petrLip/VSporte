@@ -1,177 +1,368 @@
 {% extends "base.html" %}
 {% load static %}
-{% load crispy_forms_tags %}
-{% block title %}Создать игру{% endblock %}
+{% block title %}Создать мероприятие{% endblock %}
+{% block body_class %} class="page-create-game"{% endblock %}
 
 {% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/create-game.css' %}">
     <script src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_MAPS_API_KEY }}&lang=ru_RU"></script>
 {% endblock %}
 
 {% block content %}
-    <div class="create-game-container">
-        <div class="create-game-header">
-            <h1><i class="fas fa-plus-circle"></i> Создать игру</h1>
-            <p class="subtitle">Заполните информацию о предстоящей игре</p>
-        </div>
+<div class="create-event" data-create-game>
+    <div class="create-event__shell">
+        <header class="create-event__header">
+            <a href="{% url 'games:list' %}" class="create-event__back" aria-label="Назад">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <h1 class="create-event__title">Создать мероприятие</h1>
+            <a href="{% url 'games:list' %}" class="create-event__cancel">Отмена</a>
+        </header>
 
-        <div class="create-game-wrapper">
-            <!-- Форма создания игры -->
-            <div class="create-game-form-card">
-                <form method="post" enctype="multipart/form-data" class="game-form">
-                    {% csrf_token %}
-                    
-                    <!-- Основная информация -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-info-circle"></i> Основная информация</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="{{ form.sport.id_for_label }}" class="form-label">
-                                    <i class="fas fa-futbol"></i>
-                                    {{ form.sport.label }}
-                                    <span class="required">*</span>
-                                </label>
-                                {{ form.sport }}
-                                {% if form.sport.errors %}
-                                    <div class="form-error">{{ form.sport.errors.0 }}</div>
-                                {% endif %}
+        <nav class="create-event__tabs" aria-label="Шаги создания мероприятия">
+            <button type="button"
+                    class="create-event__tab create-event__tab--active"
+                    data-tab="1"
+                    aria-selected="true">
+                Основное
+            </button>
+            <button type="button"
+                    class="create-event__tab"
+                    data-tab="2"
+                    aria-selected="false"
+                    disabled>
+                Дата и время
+            </button>
+            <button type="button"
+                    class="create-event__tab"
+                    data-tab="3"
+                    aria-selected="false"
+                    disabled>
+                Инструкции
+            </button>
+        </nav>
+
+        <div class="create-event__body">
+            <form method="post"
+                  enctype="multipart/form-data"
+                  class="create-event__form game-form"
+                  id="create-game-form"
+                  novalidate>
+                {% csrf_token %}
+
+                <div class="create-event__step" data-step="1">
+                    <p class="create-event__hint">Выберите мероприятие и укажите адрес</p>
+
+                    <div class="create-event__fields">
+                        <div class="create-event__row create-event__row--picker"
+                             role="button"
+                             tabindex="0"
+                             data-sport-trigger
+                             aria-haspopup="dialog"
+                             aria-controls="create-event-sport-sheet">
+                            <div class="create-event__row-main">
+                                <i class="fas fa-futbol create-event__row-icon" aria-hidden="true"></i>
+                                <span class="create-event__row-label">Вид спорта</span>
                             </div>
-                            
-                            <div class="form-group">
-                                <label for="{{ form.max_players.id_for_label }}" class="form-label">
-                                    <i class="fas fa-users"></i>
-                                    {{ form.max_players.label }}
-                                    <span class="required">*</span>
-                                </label>
-                                {{ form.max_players }}
-                                {% if form.max_players.errors %}
-                                    <div class="form-error">{{ form.max_players.errors.0 }}</div>
-                                {% endif %}
-                            </div>
+                            <span class="create-event__row-value" data-sport-label>Выберите</span>
+                            <i class="fas fa-chevron-right create-event__row-chevron" aria-hidden="true"></i>
+                            <div class="create-event__hidden-field">{{ form.sport }}</div>
                         </div>
-                    </div>
+                        {% if form.sport.errors %}
+                            <p class="create-event__field-error" style="padding: 0 20px 8px;">{{ form.sport.errors.0 }}</p>
+                        {% endif %}
 
-                    <!-- Время и продолжительность -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-clock"></i> Время проведения</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="{{ form.start_time.id_for_label }}" class="form-label">
-                                    <i class="fas fa-calendar-alt"></i>
-                                    {{ form.start_time.label }}
-                                    <span class="required">*</span>
-                                </label>
-                                {{ form.start_time }}
-                                <div class="form-help">{{ form.start_time.help_text }}</div>
-                                {% if form.start_time.errors %}
-                                    <div class="form-error">{{ form.start_time.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="{{ form.duration.id_for_label }}" class="form-label">
-                                    <i class="fas fa-hourglass-half"></i>
-                                    {{ form.duration.label }}
-                                    <span class="required">*</span>
-                                </label>
-                                {{ form.duration }}
-                                <div class="form-help">{{ form.duration.help_text }}</div>
-                                {% if form.duration.errors %}
-                                    <div class="form-error">{{ form.duration.errors.0 }}</div>
-                                {% endif %}
-                            </div>
+                        <div class="create-event__row create-event__row--plain">
+                            <span class="create-event__row-label create-event__row-label--muted">Выберите кол-во участников</span>
+                            <input type="number"
+                                   name="{{ form.max_players.html_name }}"
+                                   id="{{ form.max_players.id_for_label }}"
+                                   class="create-event__row-input"
+                                   value="{{ form.max_players.value|default:'0' }}"
+                                   min="2"
+                                   step="1"
+                                   inputmode="numeric"
+                                   aria-label="Количество участников">
                         </div>
-                    </div>
+                        {% if form.max_players.errors %}
+                            <p class="create-event__field-error" style="padding: 0 20px 8px;">{{ form.max_players.errors.0 }}</p>
+                        {% endif %}
 
-                    <!-- Место и стоимость -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-map-marker-alt"></i> Место и стоимость</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="{{ form.place.id_for_label }}" class="form-label">
-                                    <i class="fas fa-location-dot"></i>
-                                    {{ form.place.label }}
-                                    <span class="required">*</span>
-                                </label>
-                                {{ form.place }}
-                                <div class="form-help">Укажите адрес или название места</div>
-                                {% if form.place.errors %}
-                                    <div class="form-error">{{ form.place.errors.0 }}</div>
-                                {% endif %}
+                        <div class="create-event__row create-event__row--plain">
+                            <div class="create-event__row-main">
+                                <i class="fas fa-medal create-event__row-icon" aria-hidden="true"></i>
+                                <span class="create-event__row-label">Уровень игры</span>
                             </div>
-                            
-                            <div class="form-group">
-                                <label for="{{ form.price.id_for_label }}" class="form-label">
-                                    <i class="fas fa-ruble-sign"></i>
-                                    {{ form.price.label }}
-                                    <span class="required">*</span>
-                                </label>
-                                {{ form.price }}
-                                <div class="form-help">Стоимость участия в рублях</div>
-                                {% if form.price.errors %}
-                                    <div class="form-error">{{ form.price.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Дополнительная информация -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-edit"></i> Дополнительная информация</h3>
-                        <div class="form-group full-width">
-                            <label for="{{ form.description.id_for_label }}" class="form-label">
-                                <i class="fas fa-align-left"></i>
-                                {{ form.description.label }}
+                            <label class="create-event__toggle">
+                                <input type="checkbox"
+                                       name="{{ form.has_skill_level.html_name }}"
+                                       id="{{ form.has_skill_level.id_for_label }}"
+                                       {% if form.has_skill_level.value %}checked{% endif %}>
+                                <span class="create-event__toggle-slider"></span>
                             </label>
+                        </div>
+
+                        <div class="create-event__row create-event__row--picker"
+                             role="button"
+                             tabindex="0"
+                             data-venue-trigger
+                             aria-haspopup="dialog"
+                             aria-controls="create-event-venue-sheet">
+                            <div class="create-event__row-main">
+                                <i class="fas fa-map-marker-alt create-event__row-icon" aria-hidden="true"></i>
+                                <span class="create-event__row-label">Площадка</span>
+                            </div>
+                            <span class="create-event__row-value" data-venue-label>Выберите</span>
+                            <i class="fas fa-chevron-right create-event__row-chevron" aria-hidden="true"></i>
+                        </div>
+                        {% if form.place.errors %}
+                            <p class="create-event__field-error" style="padding: 0 20px 8px;">{{ form.place.errors.0 }}</p>
+                        {% endif %}
+
+                        <div class="create-event__row create-event__row--plain">
+                            <span class="create-event__row-label create-event__row-label--muted">Место забронировано?</span>
+                            <label class="create-event__toggle">
+                                <input type="checkbox"
+                                       name="{{ form.place_reserved.html_name }}"
+                                       id="{{ form.place_reserved.id_for_label }}"
+                                       {% if form.place_reserved.value %}checked{% endif %}>
+                                <span class="create-event__toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="create-event__step create-event__step--datetime" data-step="2" hidden>
+                    <p class="create-event__hint">Укажите дату и время</p>
+
+                    <div class="create-event__step-content">
+                            <div class="create-event__row create-event__row--picker create-event__datetime-row"
+                                 role="button"
+                                 tabindex="0"
+                                 data-date-trigger>
+                                <div class="create-event__row-main">
+                                    <i class="far fa-calendar-alt create-event__row-icon" aria-hidden="true"></i>
+                                    <span class="create-event__row-label">Дата</span>
+                                </div>
+                                <i class="fas fa-chevron-right create-event__row-chevron" aria-hidden="true"></i>
+                            </div>
+                            <p class="create-event__datetime-value" data-date-label></p>
+
+                            <div class="create-event__row create-event__row--picker create-event__datetime-row"
+                                 role="button"
+                                 tabindex="0"
+                                 data-time-trigger>
+                                <div class="create-event__row-main">
+                                    <i class="far fa-clock create-event__row-icon" aria-hidden="true"></i>
+                                    <span class="create-event__row-label">Время начала</span>
+                                </div>
+                                <i class="fas fa-chevron-right create-event__row-chevron" aria-hidden="true"></i>
+                            </div>
+                            <p class="create-event__datetime-value" data-time-label></p>
+
+                            <div class="create-event__duration-head">
+                                <span>Длительность</span>
+                                <span data-duration-label>60 мин</span>
+                            </div>
+                            <div class="create-event__duration-grid" data-duration-grid>
+                                <button type="button" class="create-event__duration-btn" data-duration-hours="0.5">30 мин</button>
+                                <button type="button" class="create-event__duration-btn create-event__duration-btn--active" data-duration-hours="1">60 мин</button>
+                                <button type="button" class="create-event__duration-btn" data-duration-hours="1.5">90 мин</button>
+                                <button type="button" class="create-event__duration-btn" data-duration-hours="2">120 мин</button>
+                            </div>
+
+                            {{ form.start_time }}
+                            {{ form.duration }}
+                            {% if form.start_time.errors %}
+                                <p class="create-event__field-error">{{ form.start_time.errors.0 }}</p>
+                            {% endif %}
+                            {% if form.duration.errors %}
+                                <p class="create-event__field-error">{{ form.duration.errors.0 }}</p>
+                            {% endif %}
+                    </div>
+                </div>
+
+                <div class="create-event__step" data-step="3" hidden>
+                    <p class="create-event__hint">Укажите дополнительные детали</p>
+
+                    <div class="create-event__step-content">
+                        <div class="create-event__field-block">
+                            <label for="{{ form.description.id_for_label }}">Инструкция</label>
                             {{ form.description }}
                             {% if form.description.errors %}
-                                <div class="form-error">{{ form.description.errors.0 }}</div>
+                                <p class="create-event__field-error">{{ form.description.errors.0 }}</p>
                             {% endif %}
                         </div>
-                        
-                        <div class="form-group full-width">
-                            <label for="{{ form.image.id_for_label }}" class="form-label">
-                                <i class="fas fa-camera"></i>
-                                {{ form.image.label }}
-                            </label>
-                            {{ form.image }}
-                            <div class="form-help">Загрузите обложку для игры (необязательно)</div>
+
+                        <div class="create-event__field-block">
+                            <label for="{{ form.price.id_for_label }}">Полная стоимость</label>
+                            <p class="create-event__field-help">Сумма, которая будет разделена между всеми участниками.</p>
+                            {{ form.price }}
+                            <p class="create-event__summary-cost">
+                                Примерная стоимость на человека <span data-price-per-player>0</span>.
+                            </p>
+                            {% if form.price.errors %}
+                                <p class="create-event__field-error">{{ form.price.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="create-event__field-block">
+                            <label for="{{ form.image.id_for_label }}">{{ form.image.label }}</label>
+                            <input type="file"
+                                   name="{{ form.image.html_name }}"
+                                   id="{{ form.image.id_for_label }}"
+                                   class="create-event__file-input"
+                                   accept="image/*">
                             {% if form.image.errors %}
-                                <div class="form-error">{{ form.image.errors.0 }}</div>
+                                <p class="create-event__field-error">{{ form.image.errors.0 }}</p>
                             {% endif %}
                         </div>
                     </div>
+                </div>
 
-                    <!-- Скрытые поля для координат -->
-                    {{ form.latitude }}
-                    {{ form.longitude }}
+                {{ form.place }}
+                {{ form.latitude }}
+                {{ form.longitude }}
 
-                    <!-- Кнопка отправки -->
-                    <div class="form-actions">
-                        <button type="submit" class="btn-create-game">
-                            <i class="fas fa-plus"></i>
-                            Создать игру
-                        </button>
-                        <p class="required-note">
-                            <span class="required">*</span> — обязательные поля
-                        </p>
-                    </div>
-                </form>
+                <footer class="create-event__footer">
+                    <button type="button"
+                            class="create-event__btn create-event__btn--primary"
+                            data-action="next">
+                        Далее
+                    </button>
+                    <button type="submit"
+                            class="create-event__btn create-event__btn--primary"
+                            data-action="submit"
+                            hidden>
+                        Создать мероприятие
+                    </button>
+                    <button type="button"
+                            class="create-event__btn create-event__btn--secondary"
+                            data-action="back"
+                            hidden>
+                        Назад
+                    </button>
+                </footer>
+            </form>
+        </div>
+    </div>
+
+    <div class="create-event__sheet" id="create-event-sport-sheet" hidden>
+        <div class="create-event__sheet-backdrop" data-sheet-close></div>
+        <div class="create-event__sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sport-sheet-title">
+            <div class="create-event__sheet-header">
+                <h2 id="sport-sheet-title">Вид спорта</h2>
+                <button type="button" class="create-event__sheet-close" data-sheet-close aria-label="Закрыть">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+            <ul class="create-event__sport-list">
+                {% for value, label in form.fields.sport.choices %}
+                    {% if value %}
+                        <li>
+                            <button type="button"
+                                    class="create-event__sport-item"
+                                    data-sport-value="{{ value }}"
+                                    data-sport-label="{{ label }}">
+                                {{ label }}
+                            </button>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
 
-            <!-- Карта -->
-            <div class="create-game-map-card">
-                <h3><i class="fas fa-map"></i> Выберите место на карте</h3>
-                <p class="map-help">Кликните на карте, чтобы указать точное местоположение игры</p>
-                <div id="map"></div>
+    <div class="create-event__sheet" id="create-event-venue-sheet" hidden>
+        <div class="create-event__sheet-backdrop" data-sheet-close></div>
+        <div class="create-event__sheet-panel" role="dialog" aria-modal="true" aria-labelledby="venue-sheet-title">
+            <div class="create-event__sheet-header">
+                <h2 id="venue-sheet-title">Площадка</h2>
+                <button type="button" class="create-event__sheet-close" data-sheet-close aria-label="Закрыть">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <input type="text"
+                   class="create-event__venue-input"
+                   id="create-event-venue-input"
+                   placeholder="Укажите адрес или название места"
+                   value="{{ form.place.value|default:'' }}"
+                   autocomplete="street-address">
+            <div class="create-event__map-wrap create-event__map-wrap--sheet">
+                <p class="map-help">Кликните на карте, чтобы указать точное местоположение</p>
+                <div id="create-game-map"></div>
                 <div class="map-status">
-                    <span id="map-status-text">Место не выбрано</span>
+                    <span id="map-status-text-sheet">Место не выбрано</span>
+                </div>
+            </div>
+            <button type="button" class="create-event__sheet-done" data-venue-confirm>Готово</button>
+        </div>
+    </div>
+
+    <div class="create-event__sheet create-event__sheet--picker" id="create-event-date-sheet" hidden>
+        <div class="create-event__sheet-backdrop" data-sheet-close></div>
+        <div class="create-event__sheet-panel create-event__date-panel" role="dialog" aria-modal="true" aria-labelledby="date-sheet-title">
+            <div class="create-event__sheet-grabber" aria-hidden="true"></div>
+            <div class="create-event__picker-header">
+                <h2 id="date-sheet-title">Выберите дату</h2>
+                <button type="button" class="create-event__picker-ok" data-date-confirm>Ок</button>
+            </div>
+            <p class="create-event__date-preview" data-date-preview></p>
+            <div class="create-event__calendar-nav">
+                <label class="create-event__calendar-year">
+                    <select data-date-year aria-label="Год"></select>
+                    <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                </label>
+                <div class="create-event__calendar-month-nav">
+                    <button type="button" class="create-event__calendar-nav-btn" data-date-prev-month aria-label="Предыдущий месяц">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button type="button" class="create-event__calendar-nav-btn" data-date-next-month aria-label="Следующий месяц">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="create-event__calendar-weekdays" aria-hidden="true">
+                <span>П</span>
+                <span>В</span>
+                <span>С</span>
+                <span>Ч</span>
+                <span>П</span>
+                <span>С</span>
+                <span>В</span>
+            </div>
+            <div class="create-event__calendar-grid" data-date-grid role="grid" aria-label="Календарь"></div>
+        </div>
+    </div>
+
+    <div class="create-event__sheet create-event__sheet--picker" id="create-event-time-sheet" hidden>
+        <div class="create-event__sheet-backdrop" data-sheet-close></div>
+        <div class="create-event__sheet-panel create-event__time-panel" role="dialog" aria-modal="true" aria-labelledby="time-sheet-title">
+            <div class="create-event__sheet-grabber" aria-hidden="true"></div>
+            <div class="create-event__picker-header">
+                <h2 id="time-sheet-title">Выбрать время</h2>
+                <button type="button" class="create-event__picker-ok" data-time-confirm>Ок</button>
+            </div>
+            <div class="create-event__time-digital">
+                <button type="button" class="create-event__time-digit create-event__time-digit--active" data-time-hour-display>00</button>
+                <span class="create-event__time-separator">:</span>
+                <button type="button" class="create-event__time-digit" data-time-minute-display>00</button>
+            </div>
+            <div class="create-event__clock">
+                <div class="create-event__clock-face">
+                    <div class="create-event__clock-hand" data-time-hand>
+                        <span class="create-event__clock-hand-line"></span>
+                        <span class="create-event__clock-hand-knob"></span>
+                    </div>
+                    <div class="create-event__clock-labels" data-time-labels></div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
-    <!-- Подключаем наш скрипт с картой -->
     <script src="{% static 'js/yandex_map.js' %}"></script>
+    <script src="{% static 'js/create-game.js' %}"></script>
 {% endblock %}

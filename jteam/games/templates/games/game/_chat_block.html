@@ -1,0 +1,15 @@
+<div class="game-view-chat-block">
+  <button type="button" class="game-view-chat-btn" data-game-chat-btn>Чат</button>
+  <div class="game-view-chat-footer">
+  <span>
+    {% if is_organizer %}
+      Вы организатор
+    {% elif is_joined %}
+      Вы участник
+    {% else %}
+      Вы не участвуете
+    {% endif %}
+  </span>
+    <i class="fas {% if game.sport == 'football' %}fa-futbol{% elif game.sport == 'tennis' %}fa-table-tennis-paddle-ball{% elif game.sport == 'volleyball' or game.sport == 'beach volleyball' %}fa-volleyball{% elif game.sport == 'ice hockey' %}fa-hockey-puck{% elif game.sport == 'chess' %}fa-chess{% else %}fa-futbol{% endif %}" aria-hidden="true"></i>
+  </div>
+</div>

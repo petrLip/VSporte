@@ -18,4 +18,6 @@ fi
 
 # Запускаем сервер
 echo "Starting server..."
-python manage.py runserver 0.0.0.0:8000
+exec gunicorn jteam.wsgi:application \
+     --bind 0.0.0.0:8000 \
+     --workers 3

@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import Select, TextInput, NumberInput, Textarea, ClearableFileInput, DateField, DateTimeInput
+from django.forms import Select, NumberInput, Textarea, ClearableFileInput
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
@@ -17,7 +17,9 @@ class GameCreateForm(forms.ModelForm):
     start_time = forms.CharField(
         label="Время начала игры",
         help_text="Формат: дд.мм.гггг чч:мм (например: 14.03.2025 13:00)",
-        widget=CustomDateTimeInput()
+        widget=CustomDateTimeInput(attrs={
+            "class": "create-event__native-hidden",
+        })
     )
 
     # Поле выбора продолжительности игры с шагом 30 минут
@@ -29,12 +31,23 @@ class GameCreateForm(forms.ModelForm):
         label="Продолжительность",
         help_text="Длительность игры в часах",
         choices=DURATION_CHOICES,
-        widget=Select()
+        widget=Select(attrs={
+            "class": "create-event__native-hidden",
+        })
     )
 
     # Добавляем скрытые поля для координат
     latitude = forms.DecimalField(widget=forms.HiddenInput(), required=False)
     longitude = forms.DecimalField(widget=forms.HiddenInput(), required=False)
+
+    has_skill_level = forms.BooleanField(
+        label="Уровень игры",
+        required=False,
+    )
+    place_reserved = forms.BooleanField(
+        label="Место забронировано?",
+        required=False,
+    )
 
     class Meta:
         model = Game
@@ -43,6 +56,8 @@ class GameCreateForm(forms.ModelForm):
             "place",
             "latitude",
             "longitude",
+            "has_skill_level",
+            "place_reserved",
             "start_time",
             "duration",
             "max_players",
@@ -52,27 +67,28 @@ class GameCreateForm(forms.ModelForm):
         ]
         labels = {
             "sport": "Вид спорта",
-            "place": "Место игры",
+            "place": "Площадка",
             "max_players": "Количество игроков",
-            "price": "Цена игры",
+            "price": "Стоимость участия",
             "description": "Описание",
             "image": "Обложка",
         }
 
         widgets = {
             "sport": Select(attrs={
-                "class": "form-field",
+                "class": "create-event__hidden-field",
+                "tabindex": "-1",
+                "aria-hidden": "true",
             }),
-            "place": TextInput(attrs={
-                "class": "form-field",
-                "placeholder": "Укажите адрес или название места"
-            }),
+            "place": forms.HiddenInput(),
             "max_players": NumberInput(attrs={
                 "class": "form-field",
                 "step": "1",
                 "min": "2",  # Минимум 2 игрока
                 "placeholder": "2"
             }),
+            "has_skill_level": forms.CheckboxInput(),
+            "place_reserved": forms.CheckboxInput(),
             "description": Textarea(attrs={
                 "class": "form-field",
                 "rows": 4,
@@ -132,15 +148,13 @@ class GameFilterForm(forms.Form):
         choices=[('', 'Все виды спорта')] + list(Game.SPORTS),
         required=False,
         widget=forms.Select(attrs={
-            'class': 'form-control form-control-width',
-            'style': 'background-color: #f8f9fa; border-radius: 5px;'
+            'class': 'games-page-filter__control',
         })
     )
     search = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
             'placeholder': 'Поиск по имени или нику',
-            'class': 'form-control form-control-width',
-            'style': 'background-color: #f8f9fa; border-radius: 5px;'
+            'class': 'games-page-filter__control',
         })
     )

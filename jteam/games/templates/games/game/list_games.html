@@ -1,35 +1,39 @@
-{% load game_extras %}
+{% load game_extras thumbnail static %}
 {% for game in games %}
-    <a href="{{ game.get_absolute_url }}" class="game-card-horizontal d-flex align-items-start justify-content-between mb-2 position-relative text-decoration-none">
-        <div class="game-info">
-            <div class="game-sport fw-bold">{{ game.get_sport_display }}</div>
-            <div class="game-time">
-                {{ game.start_time|date:"H:i" }},
-                {{ game.start_time|date:"d" }}
-                {% if game.start_time|date:'m' == '01' %}января{% elif game.start_time|date:'m' == '02' %}февраля{% elif game.start_time|date:'m' == '03' %}марта{% elif game.start_time|date:'m' == '04' %}апреля{% elif game.start_time|date:'m' == '05' %}мая{% elif game.start_time|date:'m' == '06' %}июня{% elif game.start_time|date:'m' == '07' %}июля{% elif game.start_time|date:'m' == '08' %}августа{% elif game.start_time|date:'m' == '09' %}сентября{% elif game.start_time|date:'m' == '10' %}октября{% elif game.start_time|date:'m' == '11' %}ноября{% else %}декабря{% endif %},
-                {# 0 - воскресенье, 1 - понедельник ... #}
-                {% if game.start_time|date:'w' == '1' %}пн{% elif game.start_time|date:'w' == '2' %}вт{% elif game.start_time|date:'w' == '3' %}ср{% elif game.start_time|date:'w' == '4' %}чт{% elif game.start_time|date:'w' == '5' %}пт{% elif game.start_time|date:'w' == '6' %}сб{% else %}вс{% endif %}
-            </div>
-            <div class="game-place fw-bold">"{{ game.place }}"</div>
-            <div class="game-format">
-                <i class="fas fa-users"></i> {{ game.joined_players.count }} / {{ game.max_players }}
-            </div>
+    <a href="{{ game.get_absolute_url }}" class="games-list-card text-decoration-none">
+        <div class="games-list-card__organizer">
+            {% if game.user.profile.photo %}
+                <img src="{% thumbnail game.user.profile.photo 48x48 crop %}"
+                     alt=""
+                     class="games-list-card__avatar">
+            {% else %}
+                <img src="{% static 'image/jpeg/default-profile-user.jpg' %}"
+                     alt=""
+                     class="games-list-card__avatar">
+            {% endif %}
+            <span class="games-list-card__username">{{ game.user.username }}</span>
         </div>
-        <div class="game-meta text-end">
-            <span class="game-status status-{{ game.status }}">
-                <i class="fas fa-circle"></i> {{ game.get_status_display }}
-            </span>
-            <div class="game-price mt-1">{{ game.price|floatformat:0 }} <span class="rouble">₽</span></div>
-            {% with free=game.max_players|add:"-1" %}
-                <div class="game-slots {% if free > 0 %}orange-text{% else %}text-danger{% endif %}">
-                    {% if free > 0 %}
-                        Осталось <span class="slots-count">{{ free }} мест</span>
-                    {% else %}
-                        Мест не осталось
-                    {% endif %}
-                </div>
-            {% endwith %}
+        <div class="games-list-card__details">
+            <div class="games-list-card__row">
+                <span class="games-list-card__time">
+                    <i class="far fa-clock"></i>
+                    {{ game.start_time|game_datetime_mobile }}
+                </span>
+                <span class="games-list-card__sport-icon" aria-hidden="true">
+                    <i class="fas {{ game.sport|sport_icon }}"></i>
+                </span>
+            </div>
+            <div class="games-list-card__place">
+                <i class="fas fa-map-marker-alt"></i>
+                {{ game.place }}
+            </div>
+            <div class="games-list-card__attendance">
+                <span class="games-list-card__attendance-line"></span>
+                <span class="games-list-card__attendance-text">
+                    {{ game.joined_players.count }} {{ game.joined_players.count|going_label }}
+                </span>
+                <span class="games-list-card__attendance-line"></span>
+            </div>
         </div>
     </a>
 {% endfor %}
-

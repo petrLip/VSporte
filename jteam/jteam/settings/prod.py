@@ -25,3 +25,7 @@ STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesSto
 LOGGING["handlers"]["file"]["level"] = "INFO"
 LOGGING["loggers"]["django"]["level"] = "INFO"
 LOGGING["loggers"]["games"]["level"] = "INFO"
+
+# REDIS_URL = 'redis://redis:6379'
+# CACHES['default']['LOCATION'] = REDIS_URL
+# CHANNEL_LAYERS['default']['CONFIG']['hosts'] = [REDIS_URL]

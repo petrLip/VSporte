@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 from actions.utils import create_action
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models.functions import Greatest
-from django.db.models import Case, When, IntegerField
+from django.db.models import Case, When, IntegerField, Q
 import logging
 from easy_thumbnails.files import get_thumbnailer
 
@@ -19,6 +19,33 @@ from .forms import GameCreateForm, GameFilterForm
 from .models import Game
 
 logger = logging.getLogger(__name__)
+
+r = redis.Redis(
+    host=settings.REDIS_HOST,
+    port=settings.REDIS_PORT,
+    db=settings.REDIS_DB,
+    socket_connect_timeout=2,
+)
+
+
+def track_game_view(game_id):
+    try:
+        total_views = r.incr(f"game:{game_id}:views")
+        r.zincrby("game_ranking", 1, game_id)
+        return total_views
+    except redis.exceptions.RedisError as exc:
+        logger.warning("Redis unavailable, skipping game view tracking: %s", exc)
+        return 0
+
+
+def get_top_ranked_game_ids(limit=10):
+    try:
+        game_ranking = r.zrange("game_ranking", 0, -1, desc=True)[:limit]
+        return [int(game_id) for game_id in game_ranking]
+    except redis.exceptions.RedisError as exc:
+        logger.warning("Redis unavailable, skipping game ranking: %s", exc)
+        return []
+
 
 def validate_date(value):
     if value < timezone.now().date():
@@ -80,24 +107,49 @@ def game_create(request):
 
 def game_detail(request, id, slug):
     game = get_object_or_404(Game, id=id, slug=slug)
-    # увеличить общее число просмотров игр на 1
-    # пространство имен формат object-type:id:field
-    total_views = r.incr(f"game:{game.id}:views")
-    # увеличить рейтинг игр на 1
-    # создаём сортированное множество
-    r.zincrby("game_ranking", 1, game.id)
+    total_views = track_game_view(game.id)
+    end_time = game.start_time + game.duration
+    is_organizer = request.user.is_authenticated and request.user == game.user
+    is_joined = request.user.is_authenticated and (
+        request.user in game.joined_players.all() or is_organizer
+    )
     return render(
         request,
         "games/game/detail.html",
-        {"section": "games", "game": game, "total_views": total_views, "YANDEX_MAPS_API_KEY": settings.YANDEX_MAPS_API_KEY},
+        {
+            "section": "games",
+            "game": game,
+            "total_views": total_views,
+            "end_time": end_time,
+            "total_cost": game.price * game.max_players,
+            "is_organizer": is_organizer,
+            "is_joined": is_joined,
+            "YANDEX_MAPS_API_KEY": settings.YANDEX_MAPS_API_KEY,
+        },
     )
 
 
 @login_required
 def game_list(request):
     """Выводит постраничный список игр с фильтрацией"""
-    games = Game.objects.all()
+    games = Game.objects.select_related("user", "user__profile").prefetch_related(
+        "joined_players"
+    )
     form = GameFilterForm(request.GET)
+    active_tab = request.GET.get("tab", "my_sport")
+    if active_tab not in {"calendar", "my_sport", "other"}:
+        active_tab = "my_sport"
+
+    user_sports = (
+        Game.objects.filter(Q(user=request.user) | Q(joined_players=request.user))
+        .values_list("sport", flat=True)
+        .distinct()
+    )
+
+    if active_tab == "my_sport" and user_sports:
+        games = games.filter(sport__in=user_sports)
+    elif active_tab == "other" and user_sports:
+        games = games.exclude(sport__in=user_sports)
     
     # Сортировка по статусу: Open -> Started -> Finished
     games = games.annotate(
@@ -151,17 +203,18 @@ def game_list(request):
         return render(
             request,
             "games/game/list_games.html",
-            {"section": "games", "games": games}
+            {"section": "games", "games": games},
         )
-        
+
     return render(
         request,
         "games/game/list.html",
         {
             "section": "games",
             "games": games,
-            "filter_form": form
-        }
+            "filter_form": form,
+            "active_tab": active_tab,
+        },
     )
 
 
@@ -209,19 +262,9 @@ def game_join(request):
     return JsonResponse({"status": "error"})
 
 
-# соединить с redis
-r = redis.Redis(
-    host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB
-)
-
-
 @login_required
 def game_ranking(request):
-    # получить словарь рейтинга игр
-    game_ranking = r.zrange("game_ranking", 0, -1, desc=True)[:10]
-    game_ranking_ids = [int(id) for id in game_ranking]
-
-    # получить наиболее просматриваемые изображения
+    game_ranking_ids = get_top_ranked_game_ids()
     most_viewed = list(Game.objects.filter(id__in=game_ranking_ids))
     most_viewed.sort(key=lambda x: game_ranking_ids.index(x.id))
     return render(

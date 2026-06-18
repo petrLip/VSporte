@@ -1,78 +1,166 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %}
 
 {% block title %}Список игр{% endblock %}
+{% block body_class %} class="page-games"{% endblock %}
 
 {% block content %}
-    <div class="games-page-header">
-        <h1>Игры</h1>
-    </div>
-    
-    <!-- Оборачиваем фильтры и список игр в общий контейнер -->
-    <div class="game-list-wrapper">
-        <div class="filter-container">
-          <form method="get" class="filter-form">
-              <div class="filter-row">
-                  <div class="form-group">
-                      <label for="{{ filter_form.sport.id_for_label }}">Спорт</label>
-                      {{ filter_form.sport }}
-                  </div>
-      
-                  <div class="form-group">
-                      <label for="{{ filter_form.search.id_for_label }}">Поиск</label>
-                      {{ filter_form.search }}
-                  </div>
-      
-                  <button type="submit" class="button filter-button">Применить</button>
-              </div>
-          </form>
-          <a  href="{% url 'games:create' %}"
-              class="button create-game-button">
-              Создать игру
-          </a>
+<div class="games-page">
+    <header class="games-page__compact-header dashboard-mobile-header">
+        <button type="button"
+                class="dashboard-mobile-header__location user-city-trigger"
+                data-city-trigger
+                aria-haspopup="dialog"
+                aria-controls="user-city-picker">
+            <i class="fas fa-map-marker-alt"></i>
+            <span data-city-label>Определяем город...</span>
+        </button>
+        <div class="dashboard-mobile-header__actions">
+            <button type="button" class="dashboard-mobile-header__icon-btn" aria-label="Уведомления">
+                <i class="far fa-bell"></i>
+            </button>
+            <button type="button"
+                    class="dashboard-mobile-header__icon-btn"
+                    id="games-page-menu-toggle"
+                    aria-label="Меню"
+                    aria-expanded="false"
+                    aria-controls="games-page-menu">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
-        
-        <div id="game-list" style="overflow:visible;">
-            {% include "games/game/list_games.html" %}
-        </div>
+    </header>
+
+    <nav class="games-page__menu dashboard-mobile-menu" id="games-page-menu" hidden>
+        <a href="{% url 'dashboard' %}">Главная</a>
+        <a href="{% url 'games:list' %}">События</a>
+        <a href="{% url 'user_list' %}">Игроки</a>
+        <a href="{% url 'location:list' %}">Площадки</a>
+        <a href="{% url 'user_detail' request.user.username %}">Профиль</a>
+    </nav>
+
+    <nav class="games-page-tabs" aria-label="Разделы событий">
+        <a href="?tab=calendar{% if request.GET.sport %}&sport={{ request.GET.sport }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+           class="games-page-tabs__item{% if active_tab == 'calendar' %} games-page-tabs__item--active{% endif %}">
+            Календарь
+        </a>
+        <a href="?tab=my_sport{% if request.GET.sport %}&sport={{ request.GET.sport }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+           class="games-page-tabs__item{% if active_tab == 'my_sport' %} games-page-tabs__item--active{% endif %}">
+            Мой спорт
+        </a>
+        <a href="?tab=other{% if request.GET.sport %}&sport={{ request.GET.sport }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+           class="games-page-tabs__item{% if active_tab == 'other' %} games-page-tabs__item--active{% endif %}">
+            Другое
+        </a>
+    </nav>
+
+    <div class="games-page-toolbar">
+        <a href="{% url 'games:create' %}" class="games-page-create-btn text-decoration-none">
+            <span class="games-page-create-btn__icon"><i class="fas fa-plus"></i></span>
+            Создать мероприятие
+        </a>
+        <button type="button"
+                class="games-page-filter-btn"
+                id="games-page-filter-toggle"
+                aria-label="Фильтры"
+                aria-expanded="false"
+                aria-controls="games-page-filter">
+            <i class="fas fa-filter"></i>
+        </button>
     </div>
 
-    {% include "pagination.html" with page=games %}
+    <div class="games-page-filter" id="games-page-filter" hidden>
+        <form method="get" class="games-page-filter__form">
+            <input type="hidden" name="tab" value="{{ active_tab }}">
+            <div class="games-page-filter__field">
+                <label for="{{ filter_form.sport.id_for_label }}">Спорт</label>
+                {{ filter_form.sport }}
+            </div>
+            <div class="games-page-filter__field">
+                <label for="{{ filter_form.search.id_for_label }}">Поиск</label>
+                {{ filter_form.search }}
+            </div>
+            <button type="submit" class="games-page-filter__submit">Применить</button>
+        </form>
+    </div>
+
+    <div id="game-list" class="games-page-list">
+        {% include "games/game/list_games.html" %}
+    </div>
+
+    <nav class="games-page__bottom-nav dashboard-mobile-bottom-nav" aria-label="Основная навигация">
+        <a href="{% url 'dashboard' %}" class="dashboard-mobile-bottom-nav__item">
+            <i class="fas fa-home"></i>
+            <span>Главная</span>
+        </a>
+        <a href="{% url 'games:list' %}" class="dashboard-mobile-bottom-nav__item dashboard-mobile-bottom-nav__item--active">
+            <i class="fas fa-futbol"></i>
+            <span>Игры</span>
+        </a>
+        <a href="{% url 'user_detail' request.user.username %}" class="dashboard-mobile-bottom-nav__item">
+            <i class="far fa-user"></i>
+            <span>Профиль</span>
+        </a>
+    </nav>
+</div>
 {% endblock %}
 
 {% block domready %}
-<!--Прокрутка страницы вниз, чтобы загрузить дополнительные страницы-->
 var page = 1;
 var emptyPage = false;
 var blockRequest = false;
 
-window.addEventListener('scroll', function(e) {
-    var margin = document.body.clientHeight - window.innerHeight - 200;
-    if(window.pageYOffset > margin && !emptyPage && !blockRequest) {
-        blockRequest = true;
-        page += 1;
-        
-        // Сохраняем текущие параметры фильтрации
-        var urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('page', page);
-        urlParams.set('games_only', '1');
-        
-        fetch('?' + urlParams.toString())
-        .then(response => response.text())
-        .then(html => {
-            if (html === '') {
-                emptyPage = true;
-            }
-            else {
-                var gameList = document.getElementById('game-list');
+function loadMoreGames() {
+    if (emptyPage || blockRequest) {
+        return;
+    }
+    blockRequest = true;
+    page += 1;
+
+    var urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('page', page);
+    urlParams.set('games_only', '1');
+
+    fetch('?' + urlParams.toString())
+    .then(function(response) { return response.text(); })
+    .then(function(html) {
+        if (html === '') {
+            emptyPage = true;
+        } else {
+            var gameList = document.getElementById('game-list');
+            if (gameList) {
                 gameList.insertAdjacentHTML('beforeEnd', html);
-                blockRequest = false;
             }
-        })
+            blockRequest = false;
+        }
+    });
+}
+
+window.addEventListener('scroll', function() {
+    var margin = document.body.clientHeight - window.innerHeight - 200;
+    if (window.pageYOffset > margin) {
+        loadMoreGames();
     }
 });
 
-// Launch scroll event
-const scrollEvent = new Event('scroll');
+var menuToggle = document.getElementById('games-page-menu-toggle');
+var pageMenu = document.getElementById('games-page-menu');
+if (menuToggle && pageMenu) {
+    menuToggle.addEventListener('click', function() {
+        var isOpen = !pageMenu.hidden;
+        pageMenu.hidden = isOpen;
+        menuToggle.setAttribute('aria-expanded', String(!isOpen));
+    });
+}
+
+var filterToggle = document.getElementById('games-page-filter-toggle');
+var pageFilter = document.getElementById('games-page-filter');
+if (filterToggle && pageFilter) {
+    filterToggle.addEventListener('click', function() {
+        var isOpen = !pageFilter.hidden;
+        pageFilter.hidden = isOpen;
+        filterToggle.setAttribute('aria-expanded', String(!isOpen));
+    });
+}
+
+var scrollEvent = new Event('scroll');
 window.dispatchEvent(scrollEvent);
 {% endblock %}

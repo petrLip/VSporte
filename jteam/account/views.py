@@ -15,6 +15,8 @@ from .forms import (
 from .models import Profile, Contact
 from actions.utils import create_action
 from actions.models import Action
+from games.models import Game
+from django.utils import timezone
 from .service import search_users
 
 
@@ -58,8 +60,19 @@ def dashboard(request):
     actions = actions.select_related("user", "user__profile")[:10].prefetch_related(
         "target"
     )[:10]
+    next_game = (
+        Game.objects.filter(start_time__gte=timezone.now(), status="open")
+        .order_by("start_time")
+        .first()
+    )
     return render(
-        request, "account/dashboard.html", {"section": "dashboard", "actions": actions}
+        request,
+        "account/dashboard.html",
+        {
+            "section": "dashboard",
+            "actions": actions,
+            "next_game": next_game,
+        },
     )
 
 

@@ -12,7 +12,7 @@
             <li {% if not city %}class="selected"{% endif %}>
               <a href="{% url 'location:list' %}">All</a>
             </li>
-            {% for c in cities %}
+            {% for c in city_list %}
               <li {% if city.slug == c.slug %}class="selected"
               {% endif %}>
                 <a href="{{ c.get_absolute_url }}">{{ c.name }}</a>

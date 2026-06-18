@@ -64,6 +64,8 @@ class Game(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     max_players = models.PositiveIntegerField(default=2)
+    has_skill_level = models.BooleanField(default=False)
+    place_reserved = models.BooleanField(default=False)
     joined_players = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="joined_games", blank=True
     )

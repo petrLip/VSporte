@@ -6,7 +6,10 @@ from dotenv import load_dotenv
 from django.urls import reverse_lazy
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-load_dotenv(BASE_DIR / ".env")
+for env_path in (BASE_DIR / ".env", BASE_DIR.parent / ".env"):
+    if env_path.exists():
+        load_dotenv(env_path)
+        break
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 INSTALLED_APPS = [
@@ -65,6 +68,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "social_django.context_processors.backends",
                 "cart.context_processors.cart",
+                "location.context_processors.cities",
             ],
         },
     },
@@ -75,10 +79,11 @@ WSGI_APPLICATION = "jteam.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "HOST": os.environ.get("DB_HOST"),
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": os.environ.get("DB_PASS"),
+        "HOST": os.environ.get("DB_HOST") or os.environ.get("POSTGRES_DB_HOST", "localhost"),
+        "NAME": os.environ.get("DB_NAME") or os.environ.get("POSTGRES_DB_NAME"),
+        "USER": os.environ.get("DB_USER") or os.environ.get("POSTGRES_DB_USER"),
+        "PASSWORD": os.environ.get("DB_PASS") or os.environ.get("POSTGRES_DB_PASSWORD"),
+        "PORT": os.environ.get("DB_PORT") or os.environ.get("POSTGRES_DB_PORT", "5432"),
     }
 }
 
@@ -112,8 +117,8 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-STATIC_ROOT = os.path.join(BASE_DIR, "account", "static")
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -145,9 +150,16 @@ ADMINS = json.loads(os.getenv("ADMINS", "[]"))
 YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 YANDEX_MAPS_API_KEY_STATIC = os.getenv("YANDEX_MAPS_API_KEY_STATIC")
 
+# db redis
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_DB = int(os.getenv("REDIS_DB", 0))
+
 # celery
 # CELERY_BROKER_URL = 'amqp://guest:guest@localhost'
-CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_BROKER_URL = os.getenv(
+    "CELERY_BROKER_URL", f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+)
 
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
@@ -196,11 +208,6 @@ ABSOLUTE_URL_OVERRIDES = {
 
 # debug_toolbar
 INTERNAL_IPS = ["127.0.0.1", "localhost", ".jteam.ru"]
-
-# db redis
-REDIS_HOST = "redis"
-REDIS_PORT = 6379
-REDIS_DB = 0
 
 # ключ, который будет использоваться для хранения корзины в пользовательском сеансе.
 CART_SESSION_ID = "cart"
@@ -272,4 +279,10 @@ LOGGING = {
             "propagate": False,
         },
     },
+}
+
+LOGGING["loggers"]["django"] = {
+    "handlers": ["console", "file"],
+    "level": "INFO",       # по умолчанию
+    "propagate": False,
 }

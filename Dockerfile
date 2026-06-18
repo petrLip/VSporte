@@ -1,5 +1,8 @@
 FROM python:3.11-alpine3.18
 
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 # Установка необходимых пакетов
 RUN apk update && \
     apk add --no-cache postgresql-libs gcc musl-dev \
