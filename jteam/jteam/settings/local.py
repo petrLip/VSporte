@@ -5,6 +5,11 @@ from .settings import *
 DEBUG = True
 THUMBNAIL_DEBUG = True
 
+MIDDLEWARE = [
+    "jteam.middleware.LocalhostRedirectMiddleware",
+    *MIDDLEWARE,
+]
+
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",

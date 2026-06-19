@@ -58,6 +58,16 @@ def validate_time(value):
         raise ValidationError("Время не может быть в прошлом.")
 
 
+def _game_map_context(extra=None):
+    context = {
+        "YANDEX_MAPS_API_KEY": settings.YANDEX_MAPS_API_KEY,
+        "YANDEX_MAPS_SUGGEST_API_KEY": settings.YANDEX_MAPS_SUGGEST_API_KEY,
+    }
+    if extra:
+        context.update(extra)
+    return context
+
+
 @login_required
 def game_create(request):
     if request.method == "POST":
@@ -80,7 +90,7 @@ def game_create(request):
                 if start_time <= timezone.localtime(timezone.now()):
                     messages.error(request, "Время начала игры должно быть в будущем")
                     logger.warning("Попытка создания игры в прошлом.")
-                    return render(request, "games/game/create.html", {"section": "games", "form": form})
+                    return render(request, "games/game/create.html", _game_map_context({"section": "games", "form": form}))
                 
                 # Сохраняем координаты без дополнительной проверки, так как фронтенд их гарантирует
                 new_game.latitude = form.cleaned_data.get('latitude')
@@ -97,12 +107,12 @@ def game_create(request):
             except ValidationError as e:
                 messages.error(request, e.message)
                 logger.error("Ошибка валидации при создании игры: %s", e.message)
-                return render(request, "games/game/create.html", {"section": "games", "form": form, "YANDEX_MAPS_API_KEY": settings.YANDEX_MAPS_API_KEY})
+                return render(request, "games/game/create.html", _game_map_context({"section": "games", "form": form}))
         else:
             logger.warning("Форма невалидна: ошибки - %s", form.errors)
     else:
         form = GameCreateForm()
-    return render(request, "games/game/create.html", {"section": "games", "form": form, "YANDEX_MAPS_API_KEY": settings.YANDEX_MAPS_API_KEY})
+    return render(request, "games/game/create.html", _game_map_context({"section": "games", "form": form}))
 
 
 def game_detail(request, id, slug):
@@ -124,7 +134,7 @@ def game_detail(request, id, slug):
             "total_cost": game.price * game.max_players,
             "is_organizer": is_organizer,
             "is_joined": is_joined,
-            "YANDEX_MAPS_API_KEY": settings.YANDEX_MAPS_API_KEY,
+            **_game_map_context(),
         },
     )
 

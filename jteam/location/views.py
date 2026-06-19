@@ -1,12 +1,19 @@
 import json
 import logging
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET, require_POST
 
-from .city_detection import detect_city
+from .city_detection import (
+    GeocoderUnavailableError,
+    detect_city,
+    forward_geocode_address,
+    forward_geocode_by_uri,
+)
+from .suggest import fetch_address_suggestions
 from .models import City, Place
 from cart.forms import CartAddProductForm
 from .recommender import Recommender
@@ -52,6 +59,66 @@ def api_cities(request):
             return JsonResponse({"cities": [], "error": "query_too_short"}, status=400)
         cities = cities.filter(name__icontains=query)
     return JsonResponse({"cities": list(cities.values("slug", "name")[:20])})
+
+
+@login_required
+@require_GET
+def api_suggest(request):
+    query = (request.GET.get("q") or "").strip()
+    if len(query) < 2:
+        return JsonResponse({"suggestions": []})
+
+    referer = settings.YANDEX_MAPS_REFERER or request.META.get("HTTP_REFERER")
+    suggestions = fetch_address_suggestions(query, referer=referer)
+    return JsonResponse({"suggestions": suggestions})
+
+
+@login_required
+@require_GET
+def api_geocode(request):
+    address = (request.GET.get("q") or "").strip()
+    uri = (request.GET.get("uri") or "").strip()
+    referer = settings.YANDEX_MAPS_REFERER or request.META.get("HTTP_REFERER")
+
+    if uri:
+        try:
+            result = forward_geocode_by_uri(uri, referer=referer)
+        except GeocoderUnavailableError:
+            return JsonResponse(
+                {
+                    "error": "geocoder_unavailable",
+                    "detail": "Yandex Geocoder rejected uri lookup.",
+                },
+                status=502,
+            )
+    else:
+        if len(address) < 2:
+            return JsonResponse({"error": "query_too_short"}, status=400)
+
+        try:
+            result = forward_geocode_address(address, referer=referer)
+        except GeocoderUnavailableError:
+            return JsonResponse(
+                {
+                    "error": "geocoder_unavailable",
+                    "detail": "Yandex HTTP Geocoder rejected the request. "
+                    "Open the site via http://localhost:8000/ and ensure the API key "
+                    "includes HTTP Geocoder (not JavaScript API only).",
+                },
+                status=502,
+            )
+
+    if not result:
+        return JsonResponse({"error": "not_found"}, status=404)
+
+    latitude, longitude, formatted_address = result
+    return JsonResponse(
+        {
+            "latitude": latitude,
+            "longitude": longitude,
+            "address": formatted_address or address,
+        }
+    )
 
 
 @login_required

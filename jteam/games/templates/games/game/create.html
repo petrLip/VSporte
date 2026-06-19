@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="create-event" data-create-game>
+<div class="create-event" data-create-game data-geocode-url="{% url 'location:api_geocode' %}" data-suggest-url="{% url 'location:api_suggest' %}">
     <div class="create-event__shell">
         <header class="create-event__header">
             <a href="{% url 'games:list' %}" class="create-event__back" aria-label="Назад">
@@ -282,12 +282,14 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <input type="text"
-                   class="create-event__venue-input"
-                   id="create-event-venue-input"
-                   placeholder="Укажите адрес или название места"
-                   value="{{ form.place.value|default:'' }}"
-                   autocomplete="street-address">
+            <div class="create-event__venue-input-wrap">
+                <input type="text"
+                       class="create-event__venue-input"
+                       id="create-event-venue-input"
+                       placeholder="Укажите адрес или название места"
+                       value="{{ form.place.value|default:'' }}"
+                       autocomplete="off">
+            </div>
             <div class="create-event__map-wrap create-event__map-wrap--sheet">
                 <p class="map-help">Кликните на карте, чтобы указать точное местоположение</p>
                 <div id="create-game-map"></div>
