@@ -1,0 +1,17 @@
+<nav class="mobile-bottom-nav" aria-label="Основная навигация">
+  <a href="{% url 'dashboard' %}"
+     class="mobile-bottom-nav__item{% if active == 'dashboard' %} mobile-bottom-nav__item--active{% endif %}">
+    <i class="fas fa-home" aria-hidden="true"></i>
+    <span>Главная</span>
+  </a>
+  <a href="{% url 'games:list' %}"
+     class="mobile-bottom-nav__item{% if active == 'games' %} mobile-bottom-nav__item--active{% endif %}">
+    <i class="fas fa-futbol" aria-hidden="true"></i>
+    <span>Игры</span>
+  </a>
+  <a href="{% url 'user_detail' request.user.username %}"
+     class="mobile-bottom-nav__item{% if active == 'profile' %} mobile-bottom-nav__item--active{% endif %}">
+    <i class="far fa-user" aria-hidden="true"></i>
+    <span>Профиль</span>
+  </a>
+</nav>

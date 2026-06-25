@@ -19,9 +19,14 @@
                     <i class="far fa-clock"></i>
                     {{ game.start_time|game_datetime_mobile }}
                 </span>
-                <span class="games-list-card__sport-icon" aria-hidden="true">
-                    <i class="fas {{ game.sport|sport_icon }}"></i>
-                </span>
+                <div class="games-list-card__meta">
+                    <span class="game-status status-{{ game.status }} games-list-card__status">
+                        {{ game.status|game_status_label }}
+                    </span>
+                    <span class="games-list-card__sport-icon" aria-hidden="true">
+                        <i class="fas {{ game.sport|sport_icon }}"></i>
+                    </span>
+                </div>
             </div>
             <div class="games-list-card__place">
                 <i class="fas fa-map-marker-alt"></i>

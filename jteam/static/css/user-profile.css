@@ -1,0 +1,389 @@
+/* User profile page */
+body.page-profile #content {
+    background: #f3f4f6;
+    padding: 0;
+}
+
+body.page-profile ul.messages {
+    max-width: 720px;
+    margin: 10px auto;
+    padding: 0 16px;
+}
+
+.profile-page {
+    max-width: 720px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #f3f4f6;
+    padding: 24px 16px 32px;
+}
+
+.profile-page__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.profile-page__title {
+    flex: 1;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0;
+    border: none;
+    padding: 0;
+}
+
+.profile-page__edit-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    color: #444;
+    font-size: 1.1rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.profile-page__edit-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #222;
+}
+
+.profile-page__card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    padding: 18px 16px;
+    margin-bottom: 14px;
+}
+
+.profile-page__card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 14px;
+    border: none;
+    padding: 0;
+}
+
+.profile-page__summary-top {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 14px;
+    align-items: start;
+    margin-bottom: 14px;
+}
+
+.profile-page__avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+.profile-page__avatar--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e8e8e8;
+    color: #888;
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.profile-page__stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    align-self: center;
+}
+
+.profile-page__stat {
+    text-align: center;
+}
+
+.profile-page__stat-value {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #222;
+    line-height: 1.2;
+}
+
+.profile-page__stat-label {
+    display: block;
+    font-size: 0.82rem;
+    color: #888;
+    margin-top: 2px;
+}
+
+.profile-page__username {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 6px;
+}
+
+.profile-page__name-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.profile-page__fullname {
+    font-size: 0.95rem;
+    color: #444;
+    margin: 0;
+}
+
+.profile-page__location {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.88rem;
+    color: #666;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.profile-page__location i {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.profile-page__last-game {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0;
+}
+
+.profile-page__last-game i {
+    font-size: 0.82rem;
+}
+
+.profile-page__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.profile-page__tag {
+    display: inline-block;
+    background: #444;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 999px;
+}
+
+.profile-page__empty-text {
+    color: #888;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.profile-page__info-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-page__info-row:last-of-type {
+    border-bottom: none;
+}
+
+.profile-page__info-label {
+    font-size: 0.92rem;
+    color: #222;
+    flex-shrink: 0;
+}
+
+.profile-page__info-value {
+    font-size: 0.92rem;
+    color: #888;
+    text-align: right;
+    word-break: break-word;
+}
+
+.profile-page__bio {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.profile-page__bio-label {
+    display: block;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 8px;
+}
+
+.profile-page__bio-text {
+    font-size: 0.92rem;
+    color: #555;
+    line-height: 1.5;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.profile-page__actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.profile-page__friend-btn {
+    border: none;
+    background: #5a7260;
+    color: #fff;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.profile-page__friend-btn--remove {
+    background: transparent;
+    color: #e74c3c;
+    border: 1.5px solid #e74c3c;
+}
+
+.profile-page__pending {
+    color: #888;
+    font-size: 0.92rem;
+}
+
+.profile-page__activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.profile-page__activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-page__activity-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.profile-page__activity-item:first-child {
+    padding-top: 0;
+}
+
+.profile-page__activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    color: #666;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+.profile-page__activity-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-page__activity-text {
+    margin: 0 0 4px;
+    font-size: 0.92rem;
+    color: #333;
+    line-height: 1.45;
+}
+
+.profile-page__activity-subject {
+    font-weight: 600;
+    color: #222;
+    text-decoration: none;
+}
+
+a.profile-page__activity-subject:hover {
+    color: #12c064;
+}
+
+.profile-page__activity-target {
+    font-weight: 500;
+    color: #12c064;
+    text-decoration: none;
+}
+
+.profile-page__activity-target:hover {
+    color: #00a74f;
+}
+
+.profile-page__activity-time {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+@media (max-width: 768px) {
+    body.page-profile #content {
+        padding: 0 0 88px;
+    }
+
+    body.page-profile ul.messages {
+        margin: 10px 16px;
+        padding: 0;
+    }
+
+    .profile-page {
+        padding: 0 0 24px;
+        min-height: 100vh;
+    }
+
+    .profile-page__header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #f3f4f6;
+        padding: 12px 16px;
+        margin-bottom: 0;
+    }
+
+    .profile-page__title {
+        text-align: center;
+        font-size: 1.15rem;
+    }
+
+    .profile-page__card {
+        margin: 0 16px 14px;
+    }
+
+    .profile-page__card:first-of-type {
+        margin-top: 4px;
+    }
+
+    .profile-page__actions {
+        padding: 0 16px;
+    }
+}

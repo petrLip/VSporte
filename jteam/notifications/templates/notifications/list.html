@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static thumbnail notification_extras game_extras %}
+
+{% block title %}Уведомления{% endblock %}
+{% block body_class %} class="page-notifications has-mobile-bottom-nav"{% endblock %}
+
+{% block mobile_bottom_nav %}
+  {% include "includes/mobile_bottom_nav.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="notifications-page">
+  <header class="notifications-page__mobile-header">
+    <a href="{% url 'dashboard' %}" class="notifications-page__header-btn" aria-label="Назад">
+      <i class="fas fa-arrow-left" aria-hidden="true"></i>
+    </a>
+    <h1 class="notifications-page__title">Уведомления</h1>
+    <span class="notifications-page__header-spacer" aria-hidden="true"></span>
+  </header>
+
+  <h1 class="notifications-page__desktop-title">Уведомления</h1>
+
+  {% if notifications %}
+    <div class="notifications-page__list">
+      {% for notification in notifications %}
+        {% with game=notification|notification_game %}
+        <a href="{{ notification|notification_url }}"
+           class="notifications-page__item">
+          {% if notification.actor.profile.photo %}
+            {% thumbnail notification.actor.profile.photo "48x48" crop="100%" as avatar %}
+            <img src="{{ avatar.url }}" alt="" class="notifications-page__avatar">
+          {% else %}
+            <span class="notifications-page__avatar notifications-page__avatar--placeholder">
+              {{ notification.actor.username.0|upper }}
+            </span>
+          {% endif %}
+          <div class="notifications-page__body">
+            <p class="notifications-page__message">{{ notification|notification_message }}</p>
+            {% if game %}
+              <p class="notifications-page__event-date">
+                <time datetime="{{ game.start_time|date:'c' }}">{{ game.start_time|game_datetime_mobile }}</time>
+              </p>
+            {% endif %}
+            <time class="notifications-page__created" datetime="{{ notification.created|date:'c' }}">
+              {{ notification.created|date:"j E Y" }}
+            </time>
+          </div>
+        </a>
+        {% endwith %}
+      {% endfor %}
+    </div>
+
+    {% if notifications.has_other_pages %}
+      <nav class="notifications-page__pagination" aria-label="Страницы уведомлений">
+        {% if notifications.has_previous %}
+          <a href="?page={{ notifications.previous_page_number }}" class="notifications-page__pagination-link">
+            Назад
+          </a>
+        {% endif %}
+        <span class="notifications-page__pagination-current">
+          {{ notifications.number }} из {{ notifications.paginator.num_pages }}
+        </span>
+        {% if notifications.has_next %}
+          <a href="?page={{ notifications.next_page_number }}" class="notifications-page__pagination-link">
+            Далее
+          </a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <p class="notifications-page__empty">Нет уведомлений</p>
+  {% endif %}
+</div>
+{% endblock %}

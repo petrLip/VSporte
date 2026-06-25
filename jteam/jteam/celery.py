@@ -18,8 +18,8 @@ def debug_task():
 
 
 app.conf.beat_schedule = {
-    'update-game-status-every-10-seconds': {
-        'task': 'games.tasks.update_game_status',
-        'schedule': 10.0,  # каждые 10 секунд
+    "update-game-status-every-10-seconds": {
+        "task": "games.tasks.update_game_status",
+        "schedule": 10.0,
     },
 }

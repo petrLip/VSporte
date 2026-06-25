@@ -125,6 +125,25 @@ class Game(models.Model):
         """Возвращает URL-адрес страницы детального отображения игры."""
         return reverse("games:detail", args=[self.pk, self.slug])
 
+    def compute_status(self, now=None):
+        """Вычисляет актуальный статус игры по времени начала и продолжительности."""
+        now = now or timezone.now()
+        end_time = self.start_time + self.duration
+        if now >= end_time:
+            return "finished"
+        if now >= self.start_time:
+            return "started"
+        return "open"
+
+    def sync_status(self, save=True):
+        """Синхронизирует поле status с текущим временем."""
+        new_status = self.compute_status()
+        if self.status != new_status:
+            self.status = new_status
+            if save:
+                self.save(update_fields=["status"])
+        return self.status
+
     def get_formatted_duration(self):
         """Возвращает продолжительность игры в читаемом формате (например, '2 ч 30 мин')."""
         if not self.duration:
@@ -145,10 +164,94 @@ class Game(models.Model):
 
     # ...Можно добавить проверку на существование игры перед генерацией URL-адреса.
 
-    # models.py:
+class GameParticipationRequest(models.Model):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    CANCELLED = "cancelled"
+    STATUS_CHOICES = (
+        (PENDING, "Pending"),
+        (ACCEPTED, "Accepted"),
+        (REJECTED, "Rejected"),
+        (CANCELLED, "Cancelled"),
+    )
 
-    # Подсчет оставшихся слотов.
-    # Проверка доступности игры.
-    # views.py:
-    # Обработка запроса на вступление в игру.
-    # Отображение списка доступных игр.
+    game = models.ForeignKey(
+        Game,
+        related_name="participation_requests",
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="game_participation_requests",
+        on_delete=models.CASCADE,
+    )
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=PENDING
+    )
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["game", "user"],
+                name="unique_game_participation_request",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["game", "status"]),
+            models.Index(fields=["-created"]),
+        ]
+        ordering = ["-created"]
+
+    def __str__(self):
+        return f"{self.user} -> {self.game} ({self.status})"
+
+
+class GameInvitation(models.Model):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    DECLINED = "declined"
+    CANCELLED = "cancelled"
+    STATUS_CHOICES = (
+        (PENDING, "Pending"),
+        (ACCEPTED, "Accepted"),
+        (DECLINED, "Declined"),
+        (CANCELLED, "Cancelled"),
+    )
+
+    game = models.ForeignKey(
+        Game,
+        related_name="invitations",
+        on_delete=models.CASCADE,
+    )
+    from_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="game_invitations_sent",
+        on_delete=models.CASCADE,
+    )
+    to_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="game_invitations_received",
+        on_delete=models.CASCADE,
+    )
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=PENDING
+    )
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["game", "to_user"],
+                name="unique_game_invitation",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["game", "status"]),
+            models.Index(fields=["-created"]),
+        ]
+        ordering = ["-created"]
+
+    def __str__(self):
+        return f"{self.from_user} -> {self.to_user} ({self.game}, {self.status})"

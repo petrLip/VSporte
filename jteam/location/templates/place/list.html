@@ -1,38 +1,120 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}
-    {% if city %}{{ city.name }}{% else %}Places{% endif %}
+{% block title %}Площадки{% if city %} — {{ city.name }}{% endif %}{% endblock %}
+{% block body_class %} class="page-places has-mobile-bottom-nav"{% endblock %}
+
+{% block mobile_bottom_nav %}
+  {% include "includes/mobile_bottom_nav.html" %}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/place-list.css' %}">
 {% endblock %}
 
 {% block content %}
-    <div id="sidebar">
-        <h3>Cities</h3>
-        <ul>
-            <li {% if not city %}class="selected"{% endif %}>
-              <a href="{% url 'location:list' %}">All</a>
-            </li>
-            {% for c in city_list %}
-              <li {% if city.slug == c.slug %}class="selected"
-              {% endif %}>
-                <a href="{{ c.get_absolute_url }}">{{ c.name }}</a>
-              </li>
-            {% endfor %}
-        </ul>
+<div class="places-page">
+  <header class="places-page__mobile-header">
+    <a href="{% url 'dashboard' %}" class="places-page__header-btn" aria-label="Назад">
+      <i class="fas fa-times" aria-hidden="true"></i>
+    </a>
+    <h1 class="places-page__title">Площадки</h1>
+    <div class="places-page__header-actions">
+      <button type="button"
+              class="places-page__header-btn"
+              id="places-filter-toggle"
+              aria-label="Фильтр по городу"
+              aria-expanded="false"
+              aria-controls="places-page-filter">
+        <i class="fas fa-sliders-h" aria-hidden="true"></i>
+      </button>
+      <button type="button"
+              class="places-page__header-btn"
+              id="places-search-toggle"
+              aria-label="Поиск"
+              aria-expanded="false"
+              aria-controls="places-page-search">
+        <i class="fas fa-search" aria-hidden="true"></i>
+      </button>
     </div>
-    <div id="main" class="product-list">
-      <h1>{% if city %}{{ city.name }}{% else %}Places
-      {% endif %}</h1>
+  </header>
+
+  <h1 class="places-page__desktop-title">
+    Площадки{% if city %} <span class="places-page__desktop-subtitle">— {{ city.name }}</span>{% endif %}
+  </h1>
+
+  <div class="places-page__toolbar">
+    <div class="places-page__search" id="places-page-search">
+      <form method="get"
+            action="{% if city %}{% url 'location:place_list_by_city' city.slug %}{% else %}{% url 'location:list' %}{% endif %}"
+            class="places-page__search-form"
+            role="search">
+        <input type="search"
+               name="q"
+               value="{{ query }}"
+               placeholder="Название площадки"
+               class="places-page__search-input"
+               aria-label="Поиск площадки">
+        <button type="submit" class="places-page__search-submit">Поиск</button>
+      </form>
+    </div>
+
+    <div class="places-page__filter" id="places-page-filter">
+      <form method="get"
+            action="{% url 'location:list' %}"
+            class="places-page__filter-form">
+        {% if query %}
+          <input type="hidden" name="q" value="{{ query }}">
+        {% endif %}
+        <label class="places-page__filter-label" for="places-city-filter">Город</label>
+        <select name="city" id="places-city-filter" class="places-page__filter-select">
+          <option value=""{% if not city %} selected{% endif %}>Все города</option>
+          {% for c in city_list %}
+            <option value="{{ c.slug }}"{% if city and city.slug == c.slug %} selected{% endif %}>
+              {{ c.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="places-page__filter-submit">Применить</button>
+      </form>
+    </div>
+  </div>
+
+  <nav class="places-page__city-tabs" aria-label="Фильтр по городу">
+    <a href="{% url 'location:list' %}{% if query %}?q={{ query|urlencode }}{% endif %}"
+       class="places-page__city-tab{% if not city %} places-page__city-tab--active{% endif %}">
+      Все
+    </a>
+    {% for c in city_list %}
+      <a href="{% url 'location:place_list_by_city' c.slug %}{% if query %}?q={{ query|urlencode }}{% endif %}"
+         class="places-page__city-tab{% if city and city.slug == c.slug %} places-page__city-tab--active{% endif %}">
+        {{ c.name }}
+      </a>
+    {% endfor %}
+  </nav>
+
+  <div class="places-page__list" id="places-list">
+    {% if places %}
       {% for place in places %}
-        <div class="item">
-            <a href="{{ place.get_absolute_url }}">
-                <img src="{% if place.image %}{{ place.image.url }}
-                          {% else %}{% static 'image/png/no_image.png' %}{% endif %}">
-            </a>
-            <a href="{{ place.get_absolute_url }}">{{ place.name }}</a>
-            <br>
-            ₽{{ place.price }}
-        </div>
+        {% include "place/_place_card.html" %}
       {% endfor %}
-    </div>
+    {% else %}
+      <p class="places-page__empty">
+        {% if query and city %}
+          В городе {{ city.name }} по запросу «{{ query }}» площадок не найдено.
+        {% elif query %}
+          По запросу «{{ query }}» площадок не найдено.
+        {% elif city %}
+          В городе {{ city.name }} пока нет доступных площадок.
+        {% else %}
+          Пока нет доступных площадок.
+        {% endif %}
+      </p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/place-list.js' %}"></script>
 {% endblock %}

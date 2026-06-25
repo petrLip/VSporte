@@ -11,6 +11,7 @@
     {% bootstrap_javascript %}
     {% load thumbnail %}
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/notifications.css' %}">
     <link rel="shortcut icon" href="{% static 'image/jpeg/logo_jteam_ico.ico' %}" type="image/x-icon"/>
     <!-- icons with fontawesomefree -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css">
@@ -36,6 +37,7 @@
                 <li {% if section == "location" %} class="selected"{% endif %}>
                     <a href="{% url 'location:list' %}">Площадки</a>
                 </li>
+                {% if marketplace_enabled %}
                 <li {% if section == "cart" %} class="selected"{% endif %}>
                       {% with total_items=cart|length %}
                         {% if total_items > 0 %}
@@ -51,6 +53,7 @@
                         {% endif %}
                       {% endwith %}
                 </li>
+                {% endif %}
             </ul>
         {% endif %}
         <span class="user">
@@ -65,6 +68,7 @@
                         <span data-city-label>Определяем город...</span>
                     </button>
                     <span id="user-local-time" class="mini-local-time">Определение местного времени...</span>
+                    {% include "includes/notification_bell.html" %}
                     {% if request.user.profile.photo %}
                         <a href="{{ user.get_absolute_url }}">
                             <img src="{% thumbnail request.user.profile.photo 40x40 crop %}" class="user-avatar">
@@ -113,6 +117,8 @@
     </div>
 
     {% if request.user.is_authenticated %}
+        {% block mobile_bottom_nav %}{% endblock %}
+
         {{ cities|json_script:"user-cities-data" }}
         <div id="user-city-config"
              hidden

@@ -1,0 +1,10 @@
+<a href="{% url 'notifications:list' %}"
+   class="notification-bell{% if extra_class %} {{ extra_class }}{% endif %}"
+   aria-label="Уведомления">
+  <i class="far fa-bell"></i>
+  {% if notifications_unread_count %}
+    <span class="notification-bell__badge" aria-hidden="true">
+      {% if notifications_unread_count > 99 %}99+{% else %}{{ notifications_unread_count }}{% endif %}
+    </span>
+  {% endif %}
+</a>

@@ -1,31 +1,141 @@
 {% extends "base.html" %}
 {% load static %}
 {% load thumbnail %}
-{% load crispy_forms_tags %}
 
-{% block title %}People{% endblock %}
+{% block title %}Участники{% endblock %}
+{% block body_class %} class="page-users has-mobile-bottom-nav" data-friendship-url="{% url 'user_friendship' %}"{% endblock %}
+
+{% block mobile_bottom_nav %}
+  {% include "includes/mobile_bottom_nav.html" %}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/user-list.css' %}">
+{% endblock %}
 
 {% block content %}
- <h1>Игроки</h1>
- {% include 'account/user/search.html' %}
-  <div id="people-list">
-    {% for user in users %}
-      <div class="user">
-        <a href="{{ user.get_absolute_url }}">
-             {% if user.profile.photo %}
-                <img src="{% thumbnail user.profile.photo 220x320 %}">
-             {% else %}
-                 <img src="{{ user.profile.photo }}">
-             {% endif %}
-        </a>
-        <div class="user-overlay"></div>
-        <div class="info">
-          <a href="{{ user.get_absolute_url }}" class="title">
-            {{ user.get_full_name }}
-          </a>
-          <p>{{ user.profile.city|default:user.username }}</p>
-        </div>
-      </div>
-    {% endfor %}
+<div class="users-page">
+  <header class="users-page__mobile-header">
+    <a href="{% url 'dashboard' %}" class="users-page__header-btn" aria-label="Назад">
+      <i class="fas fa-times" aria-hidden="true"></i>
+    </a>
+    <h1 class="users-page__title">Участники</h1>
+    <div class="users-page__header-actions">
+      <button type="button"
+              class="users-page__header-btn"
+              id="users-filter-toggle"
+              aria-label="Фильтр"
+              aria-expanded="false"
+              aria-controls="users-page-filter">
+        <i class="fas fa-sliders-h" aria-hidden="true"></i>
+      </button>
+      <button type="button"
+              class="users-page__header-btn users-page__header-btn--search"
+              id="users-search-toggle"
+              aria-label="Поиск"
+              aria-expanded="false"
+              aria-controls="users-page-search">
+        <i class="fas fa-search" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <h1 class="users-page__desktop-title">Участники</h1>
+
+  <div class="users-page__toolbar">
+    <div class="users-page__search" id="users-page-search">
+      <form method="get" action="{% url 'user_list' %}" class="users-page__search-form" role="search">
+        {% if played_filter != "all" %}
+          <input type="hidden" name="played" value="{{ played_filter }}">
+        {% endif %}
+        {% if requests_filter != "incoming" %}
+          <input type="hidden" name="requests" value="{{ requests_filter }}">
+        {% endif %}
+        {{ form.query }}
+        <button type="submit" class="users-page__search-submit">Поиск</button>
+      </form>
+    </div>
+
+    <div class="users-page__filter" id="users-page-filter">
+      <form method="get" action="{% url 'user_list' %}" class="users-page__filter-form">
+        {% if query %}
+          <input type="hidden" name="query" value="{{ query }}">
+        {% endif %}
+        {% if requests_filter != "incoming" %}
+          <input type="hidden" name="requests" value="{{ requests_filter }}">
+        {% endif %}
+        <label class="users-page__filter-label" for="users-played-filter">Показать</label>
+        <select name="played" id="users-played-filter" class="users-page__filter-select">
+          <option value="all"{% if played_filter == "all" %} selected{% endif %}>Всех игроков</option>
+          <option value="played"{% if played_filter == "played" %} selected{% endif %}>С кем играл</option>
+          <option value="not_played"{% if played_filter == "not_played" %} selected{% endif %}>С кем не играл</option>
+        </select>
+        <button type="submit" class="users-page__filter-submit">Применить</button>
+      </form>
+    </div>
   </div>
+
+  <section class="users-page__requests" aria-labelledby="users-requests-title">
+    <h2 class="users-page__requests-title" id="users-requests-title">Заявки в друзья</h2>
+
+    <nav class="users-page__requests-tabs" aria-label="Фильтр заявок">
+      <a href="{% url 'user_list' %}?requests=incoming{% if query %}&query={{ query|urlencode }}{% endif %}{% if played_filter != 'all' %}&played={{ played_filter }}{% endif %}"
+         class="users-page__requests-tab{% if requests_filter == 'incoming' %} users-page__requests-tab--active{% endif %}">
+        Входящие
+        {% if incoming_count %}
+          <span class="users-page__requests-badge">{{ incoming_count }}</span>
+        {% endif %}
+      </a>
+      <a href="{% url 'user_list' %}?requests=outgoing{% if query %}&query={{ query|urlencode }}{% endif %}{% if played_filter != 'all' %}&played={{ played_filter }}{% endif %}"
+         class="users-page__requests-tab{% if requests_filter == 'outgoing' %} users-page__requests-tab--active{% endif %}">
+        Исходящие
+        {% if outgoing_count %}
+          <span class="users-page__requests-badge">{{ outgoing_count }}</span>
+        {% endif %}
+      </a>
+    </nav>
+
+    <div class="users-page__list users-page__list--requests" id="users-requests-list">
+      {% if request_items %}
+        {% for item in request_items %}
+          {% include "account/user/_user_row.html" with item=item in_requests_section=True %}
+        {% endfor %}
+      {% else %}
+        <p class="users-page__empty users-page__empty--requests">
+          {% if requests_filter == "incoming" %}
+            Входящих заявок пока нет.
+          {% else %}
+            Исходящих заявок пока нет.
+          {% endif %}
+        </p>
+      {% endif %}
+    </div>
+  </section>
+
+  <h2 class="users-page__section-title">Все участники</h2>
+
+  <div class="users-page__list" id="users-list">
+    {% if user_items %}
+      {% for item in user_items %}
+        {% include "account/user/_user_row.html" %}
+      {% endfor %}
+    {% else %}
+      <p class="users-page__empty">
+        {% if query %}
+          По запросу «{{ query }}» никого не найдено.
+        {% elif played_filter == "played" %}
+          Пока нет игроков, с которыми вы играли.
+        {% elif played_filter == "not_played" %}
+          Все игроки уже были вашими соперниками или партнёрами.
+        {% else %}
+          Пока нет других игроков.
+        {% endif %}
+      </p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/user-list.js' %}"></script>
 {% endblock %}

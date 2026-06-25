@@ -19,6 +19,18 @@ RU_MONTHS = (
     "дек.",
 )
 
+GAME_STATUS_LABELS = {
+    "open": "Открыта",
+    "started": "Идёт",
+    "finished": "Завершена",
+}
+
+
+@register.filter
+def game_status_label(status):
+    return GAME_STATUS_LABELS.get(status, status)
+
+
 SPORT_ICONS = {
     "football": "fa-futbol",
     "tennis": "fa-table-tennis-paddle-ball",

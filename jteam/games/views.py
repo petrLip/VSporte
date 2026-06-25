@@ -1,11 +1,13 @@
 import redis
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from actions.utils import create_action
@@ -14,11 +16,17 @@ from django.db.models.functions import Greatest
 from django.db.models import Case, When, IntegerField, Q
 import logging
 from easy_thumbnails.files import get_thumbnailer
+from notifications.models import Notification
+from notifications.services import create_notification
 
+from account.service import get_friend_users
 from .forms import GameCreateForm, GameFilterForm
-from .models import Game
+from .models import Game, GameParticipationRequest, GameInvitation
+from .tasks import sync_game_statuses
+from .templatetags.game_extras import GAME_STATUS_LABELS
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 r = redis.Redis(
     host=settings.REDIS_HOST,
@@ -68,6 +76,77 @@ def _game_map_context(extra=None):
     return context
 
 
+def _build_players_payload(game):
+    players = []
+    for player in game.joined_players.select_related("profile").all():
+        thumb_url = None
+        if player.profile.photo:
+            thumb_opts = {"size": (80, 80), "crop": True, "upscale": True}
+            thumb_url = get_thumbnailer(player.profile.photo).get_thumbnail(
+                thumb_opts
+            ).url
+
+        players.append({
+            "username": player.username,
+            "photo": thumb_url,
+            "url": reverse("user_detail", args=[player.username]),
+        })
+    return players
+
+
+def _participation_status_for_user(game, user):
+    if user in game.joined_players.all() or user == game.user:
+        return "joined"
+    if GameInvitation.objects.filter(
+        game=game,
+        to_user=user,
+        status=GameInvitation.PENDING,
+    ).exists():
+        return "invited"
+    if GameParticipationRequest.objects.filter(
+        game=game,
+        user=user,
+        status=GameParticipationRequest.PENDING,
+    ).exists():
+        return "pending"
+    return "none"
+
+
+def _pending_invitation_for_user(game, user):
+    return GameInvitation.objects.filter(
+        game=game,
+        to_user=user,
+        status=GameInvitation.PENDING,
+    ).first()
+
+
+def _invitable_friends(game, organizer):
+    joined_ids = set(
+        game.joined_players.values_list("pk", flat=True)
+    ) | {organizer.pk}
+    pending_invitee_ids = set(
+        GameInvitation.objects.filter(
+            game=game,
+            status=GameInvitation.PENDING,
+        ).values_list("to_user_id", flat=True)
+    )
+    exclude_ids = joined_ids | pending_invitee_ids
+    return [
+        friend
+        for friend in get_friend_users(organizer)
+        if friend.pk not in exclude_ids
+    ]
+
+
+def _join_response(game, user):
+    return JsonResponse({
+        "status": "ok",
+        "players": _build_players_payload(game),
+        "players_count": game.joined_players.count(),
+        "participation_status": _participation_status_for_user(game, user),
+    })
+
+
 @login_required
 def game_create(request):
     if request.method == "POST":
@@ -110,19 +189,60 @@ def game_create(request):
                 return render(request, "games/game/create.html", _game_map_context({"section": "games", "form": form}))
         else:
             logger.warning("Форма невалидна: ошибки - %s", form.errors)
+            for field_errors in form.errors.values():
+                if field_errors:
+                    messages.error(request, field_errors[0])
+                    break
     else:
-        form = GameCreateForm()
+        initial = {}
+        place = (request.GET.get("place") or "").strip()
+        if place:
+            initial["place"] = place
+        form = GameCreateForm(initial=initial)
     return render(request, "games/game/create.html", _game_map_context({"section": "games", "form": form}))
 
 
 def game_detail(request, id, slug):
     game = get_object_or_404(Game, id=id, slug=slug)
+    game.sync_status()
     total_views = track_game_view(game.id)
     end_time = game.start_time + game.duration
     is_organizer = request.user.is_authenticated and request.user == game.user
     is_joined = request.user.is_authenticated and (
         request.user in game.joined_players.all() or is_organizer
     )
+    has_pending_request = False
+    has_pending_invitation = False
+    pending_invitation = None
+    pending_participation_requests = []
+    invite_friends = []
+    pending_invitations = []
+    if request.user.is_authenticated:
+        has_pending_request = GameParticipationRequest.objects.filter(
+            game=game,
+            user=request.user,
+            status=GameParticipationRequest.PENDING,
+        ).exists()
+        pending_invitation = _pending_invitation_for_user(game, request.user)
+        has_pending_invitation = pending_invitation is not None
+        if is_organizer:
+            pending_participation_requests = (
+                GameParticipationRequest.objects.filter(
+                    game=game,
+                    status=GameParticipationRequest.PENDING,
+                )
+                .select_related("user", "user__profile")
+                .order_by("created")
+            )
+            invite_friends = _invitable_friends(game, request.user)
+            pending_invitations = (
+                GameInvitation.objects.filter(
+                    game=game,
+                    status=GameInvitation.PENDING,
+                )
+                .select_related("to_user", "to_user__profile")
+                .order_by("created")
+            )
     return render(
         request,
         "games/game/detail.html",
@@ -134,14 +254,31 @@ def game_detail(request, id, slug):
             "total_cost": game.price * game.max_players,
             "is_organizer": is_organizer,
             "is_joined": is_joined,
+            "has_pending_request": has_pending_request,
+            "has_pending_invitation": has_pending_invitation,
+            "pending_invitation": pending_invitation,
+            "pending_participation_requests": pending_participation_requests,
+            "invite_friends": invite_friends,
+            "pending_invitations": pending_invitations,
             **_game_map_context(),
         },
     )
 
 
+def game_status(request, id):
+    """Лёгкий JSON-эндпоинт для опроса статуса игры со страницы деталей."""
+    game = get_object_or_404(Game, id=id)
+    game.sync_status()
+    return JsonResponse({
+        "status": game.status,
+        "label": GAME_STATUS_LABELS.get(game.status, game.status),
+    })
+
+
 @login_required
 def game_list(request):
     """Выводит постраничный список игр с фильтрацией"""
+    sync_game_statuses()
     games = Game.objects.select_related("user", "user__profile").prefetch_related(
         "joined_players"
     )
@@ -160,18 +297,17 @@ def game_list(request):
         games = games.filter(sport__in=user_sports)
     elif active_tab == "other" and user_sports:
         games = games.exclude(sport__in=user_sports)
-    
-    # Сортировка по статусу: Open -> Started -> Finished
+
+    # Активные игры сверху (новые первыми), завершённые — внизу
     games = games.annotate(
         status_priority=Case(
-            When(status='open', then=1),
-            When(status='started', then=2),
-            When(status='finished', then=3),
+            When(status="open", then=1),
+            When(status="started", then=2),
+            When(status="finished", then=3),
             default=4,
             output_field=IntegerField(),
         )
-    ).order_by('status_priority', 'start_time')
-    
+    ).order_by("status_priority", "-start_time")
     if form.is_valid():
         sport = form.cleaned_data.get('sport')
         search = form.cleaned_data.get('search')
@@ -190,7 +326,7 @@ def game_list(request):
                     'similarity_first_name',
                     'similarity_last_name'
                 )
-            ).filter(similarity__gt=0.1).order_by('status_priority', '-similarity')
+            ).filter(similarity__gt=0.1).order_by("-similarity", "status_priority", "-start_time")
 
     # Пагинация
     paginator = Paginator(games, 12)
@@ -228,47 +364,365 @@ def game_list(request):
     )
 
 
-# Не дает пользователям, не вошедшим в систему, обращаться к этому представлению.
-# Этому представлению разрешаются запросы только методом POST.
 @login_required
 @require_POST
 def game_join(request):
-    """Представление, позволяющее присоединиться/выйти из игры"""
+    """Представление для присоединения, выхода и отмены заявки на участие."""
     game_id = request.POST.get("id")
     action = request.POST.get("action")
-    if game_id and action:
-        try:
-            game = Game.objects.get(id=game_id)
-            if action == "join":
-                if game.joined_players.count() >= game.max_players:
-                    return JsonResponse({
-                        "status": "error",
-                        "message": "Максимальное количество игроков достигнуто.",
-                    })
+    if not game_id or not action:
+        return JsonResponse({"status": "error"})
+
+    try:
+        game = Game.objects.get(id=game_id)
+    except Game.DoesNotExist:
+        return JsonResponse({"status": "error"})
+
+    game.sync_status()
+
+    if game.status != "open":
+        return JsonResponse({
+            "status": "error",
+            "message": "Игра недоступна для изменения участия.",
+        })
+
+    if action == "join":
+        if request.user == game.user:
+            if request.user not in game.joined_players.all():
                 game.joined_players.add(request.user)
                 create_action(request.user, "присоединился(ась) к игре", game)
-            else:
-                game.joined_players.remove(request.user)
+            return _join_response(game, request.user)
 
-            players = []
-            for player in game.joined_players.all():
-                thumb_url = None
-                if player.profile.photo:
-                    thumb_opts = {'size': (80, 80), 'crop': True, 'upscale': True}
-                    thumb_url = get_thumbnailer(player.profile.photo).get_thumbnail(thumb_opts).url
-
-                players.append({
-                    "username": player.username,
-                    "photo": thumb_url,
-                })
-
+        if request.user in game.joined_players.all():
             return JsonResponse({
-                "status": "ok",
-                "players": players,
-                "players_count": game.joined_players.count()
+                "status": "error",
+                "message": "Вы уже участвуете в этой игре.",
             })
-        except Game.DoesNotExist:
-            pass
+
+        if game.joined_players.count() >= game.max_players:
+            return JsonResponse({
+                "status": "error",
+                "message": "Максимальное количество игроков достигнуто.",
+            })
+
+        if GameInvitation.objects.filter(
+            game=game,
+            to_user=request.user,
+            status=GameInvitation.PENDING,
+        ).exists():
+            return JsonResponse({
+                "status": "error",
+                "message": "У вас есть приглашение на эту игру.",
+            })
+
+        participation_request, created = (
+            GameParticipationRequest.objects.get_or_create(
+                game=game,
+                user=request.user,
+                defaults={"status": GameParticipationRequest.PENDING},
+            )
+        )
+        if not created:
+            if participation_request.status == GameParticipationRequest.PENDING:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Заявка уже отправлена.",
+                })
+            if participation_request.status == GameParticipationRequest.ACCEPTED:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Вы уже участвуете в этой игре.",
+                })
+            participation_request.status = GameParticipationRequest.PENDING
+            participation_request.save(update_fields=["status"])
+
+        create_notification(
+            game.user,
+            request.user,
+            Notification.TYPE_GAME_PARTICIPATION_REQUEST,
+            participation_request,
+        )
+        return _join_response(game, request.user)
+
+    if action == "cancel_request":
+        updated = GameParticipationRequest.objects.filter(
+            game=game,
+            user=request.user,
+            status=GameParticipationRequest.PENDING,
+        ).update(status=GameParticipationRequest.CANCELLED)
+        if not updated:
+            return JsonResponse({
+                "status": "error",
+                "message": "Активная заявка не найдена.",
+            })
+        return _join_response(game, request.user)
+
+    if action == "leave":
+        if request.user == game.user:
+            game.joined_players.remove(request.user)
+        elif request.user in game.joined_players.all():
+            game.joined_players.remove(request.user)
+            GameParticipationRequest.objects.filter(
+                game=game,
+                user=request.user,
+                status=GameParticipationRequest.ACCEPTED,
+            ).update(status=GameParticipationRequest.CANCELLED)
+        else:
+            return JsonResponse({
+                "status": "error",
+                "message": "Вы не участвуете в этой игре.",
+            })
+        return _join_response(game, request.user)
+
+    return JsonResponse({"status": "error"})
+
+
+@login_required
+@require_POST
+def game_participation(request):
+    """Принятие, отклонение или отмена заявки на участие в игре."""
+    request_id = request.POST.get("id")
+    action = request.POST.get("action")
+    if not request_id or not action:
+        return JsonResponse({"status": "error"})
+
+    participation_request = get_object_or_404(
+        GameParticipationRequest.objects.select_related("game", "user"),
+        id=request_id,
+    )
+    game = participation_request.game
+    game.sync_status()
+
+    if game.status != "open":
+        return JsonResponse({
+            "status": "error",
+            "message": "Игра недоступна для изменения участия.",
+        })
+
+    if action == "accept":
+        if request.user != game.user:
+            return JsonResponse({"status": "error"})
+        if participation_request.status != GameParticipationRequest.PENDING:
+            return JsonResponse({
+                "status": "error",
+                "message": "Заявка уже обработана.",
+            })
+        if game.joined_players.count() >= game.max_players:
+            return JsonResponse({
+                "status": "error",
+                "message": "Максимальное количество игроков достигнуто.",
+            })
+
+        participation_request.status = GameParticipationRequest.ACCEPTED
+        participation_request.save(update_fields=["status"])
+        game.joined_players.add(participation_request.user)
+        create_action(
+            participation_request.user,
+            "присоединился(ась) к игре",
+            game,
+        )
+        create_notification(
+            participation_request.user,
+            request.user,
+            Notification.TYPE_GAME_PARTICIPATION_ACCEPTED,
+            participation_request,
+        )
+        return _join_response(game, request.user)
+
+    if action == "reject":
+        if request.user != game.user:
+            return JsonResponse({"status": "error"})
+        if participation_request.status != GameParticipationRequest.PENDING:
+            return JsonResponse({
+                "status": "error",
+                "message": "Заявка уже обработана.",
+            })
+
+        participation_request.status = GameParticipationRequest.REJECTED
+        participation_request.save(update_fields=["status"])
+        create_notification(
+            participation_request.user,
+            request.user,
+            Notification.TYPE_GAME_PARTICIPATION_REJECTED,
+            participation_request,
+        )
+        return JsonResponse({"status": "ok"})
+
+    if action == "cancel":
+        if request.user != participation_request.user:
+            return JsonResponse({"status": "error"})
+        if participation_request.status != GameParticipationRequest.PENDING:
+            return JsonResponse({
+                "status": "error",
+                "message": "Заявка уже обработана.",
+            })
+
+        participation_request.status = GameParticipationRequest.CANCELLED
+        participation_request.save(update_fields=["status"])
+        return JsonResponse({"status": "ok"})
+
+    return JsonResponse({"status": "error"})
+
+
+@login_required
+@require_POST
+def game_invite(request):
+    """Создание, принятие, отклонение или отмена приглашения на игру."""
+    action = request.POST.get("action")
+    if not action:
+        return JsonResponse({"status": "error"})
+
+    if action == "invite":
+        game_id = request.POST.get("game_id")
+        to_user_id = request.POST.get("to_user_id")
+        if not game_id or not to_user_id:
+            return JsonResponse({"status": "error"})
+
+        game = get_object_or_404(Game, id=game_id)
+        game.sync_status()
+        if request.user != game.user:
+            return JsonResponse({"status": "error"})
+        if game.status != "open":
+            return JsonResponse({
+                "status": "error",
+                "message": "Игра недоступна для приглашений.",
+            })
+        if game.joined_players.count() >= game.max_players:
+            return JsonResponse({
+                "status": "error",
+                "message": "Максимальное количество игроков достигнуто.",
+            })
+
+        to_user = get_object_or_404(User, id=to_user_id)
+        if to_user == request.user:
+            return JsonResponse({"status": "error"})
+        if to_user in game.joined_players.all():
+            return JsonResponse({
+                "status": "error",
+                "message": "Игрок уже участвует в игре.",
+            })
+
+        friend_ids = set(
+            get_friend_users(request.user).values_list("pk", flat=True)
+        )
+        if to_user.pk not in friend_ids:
+            return JsonResponse({
+                "status": "error",
+                "message": "Можно приглашать только друзей.",
+            })
+
+        invitation, created = GameInvitation.objects.get_or_create(
+            game=game,
+            to_user=to_user,
+            defaults={
+                "from_user": request.user,
+                "status": GameInvitation.PENDING,
+            },
+        )
+        if not created:
+            if invitation.status == GameInvitation.PENDING:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Приглашение уже отправлено.",
+                })
+            if invitation.status == GameInvitation.ACCEPTED:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Игрок уже участвует в игре.",
+                })
+            invitation.from_user = request.user
+            invitation.status = GameInvitation.PENDING
+            invitation.save(update_fields=["from_user", "status"])
+
+        create_notification(
+            to_user,
+            request.user,
+            Notification.TYPE_GAME_INVITATION,
+            invitation,
+        )
+        return JsonResponse({
+            "status": "ok",
+            "invitation_id": invitation.id,
+        })
+
+    invitation_id = request.POST.get("id")
+    if not invitation_id:
+        return JsonResponse({"status": "error"})
+
+    invitation = get_object_or_404(
+        GameInvitation.objects.select_related("game", "to_user", "from_user"),
+        id=invitation_id,
+    )
+    game = invitation.game
+    game.sync_status()
+
+    if game.status != "open":
+        return JsonResponse({
+            "status": "error",
+            "message": "Игра недоступна для изменения участия.",
+        })
+
+    if action == "accept":
+        if request.user != invitation.to_user:
+            return JsonResponse({"status": "error"})
+        if invitation.status != GameInvitation.PENDING:
+            return JsonResponse({
+                "status": "error",
+                "message": "Приглашение уже обработано.",
+            })
+        if request.user in game.joined_players.all():
+            return JsonResponse({
+                "status": "error",
+                "message": "Вы уже участвуете в этой игре.",
+            })
+        if game.joined_players.count() >= game.max_players:
+            return JsonResponse({
+                "status": "error",
+                "message": "Максимальное количество игроков достигнуто.",
+            })
+
+        invitation.status = GameInvitation.ACCEPTED
+        invitation.save(update_fields=["status"])
+        game.joined_players.add(request.user)
+        GameParticipationRequest.objects.filter(
+            game=game,
+            user=request.user,
+            status=GameParticipationRequest.PENDING,
+        ).update(status=GameParticipationRequest.CANCELLED)
+        create_action(request.user, "присоединился(ась) к игре", game)
+        return _join_response(game, request.user)
+
+    if action == "decline":
+        if request.user != invitation.to_user:
+            return JsonResponse({"status": "error"})
+        if invitation.status != GameInvitation.PENDING:
+            return JsonResponse({
+                "status": "error",
+                "message": "Приглашение уже обработано.",
+            })
+
+        invitation.status = GameInvitation.DECLINED
+        invitation.save(update_fields=["status"])
+        return JsonResponse({
+            "status": "ok",
+            "participation_status": _participation_status_for_user(
+                game, request.user
+            ),
+        })
+
+    if action == "cancel":
+        if request.user != invitation.from_user:
+            return JsonResponse({"status": "error"})
+        if invitation.status != GameInvitation.PENDING:
+            return JsonResponse({
+                "status": "error",
+                "message": "Приглашение уже обработано.",
+            })
+
+        invitation.status = GameInvitation.CANCELLED
+        invitation.save(update_fields=["status"])
+        return JsonResponse({"status": "ok"})
+
     return JsonResponse({"status": "error"})
 
 

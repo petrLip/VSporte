@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     "account.apps.AccountConfig",
     "games.apps.GamesConfig",
     "actions.apps.ActionsConfig",
+    "notifications.apps.NotificationsConfig",
     "location.apps.LocationConfig",
     "cart.apps.CartConfig",
     "orders.apps.OrdersConfig",
@@ -68,6 +69,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "social_django.context_processors.backends",
                 "cart.context_processors.cart",
+                "notifications.context_processors.notifications",
                 "location.context_processors.cities",
             ],
         },
@@ -214,6 +216,14 @@ INTERNAL_IPS = ["127.0.0.1", "localhost", ".jteam.ru"]
 
 # ключ, который будет использоваться для хранения корзины в пользовательском сеансе.
 CART_SESSION_ID = "cart"
+
+# Маркетплейс площадок: корзина, заказы, оплата. Выключено до появления партнёров.
+MARKETPLACE_ENABLED = os.getenv("MARKETPLACE_ENABLED", "false").lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
 
 # Настроечные параметры Stripe
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")

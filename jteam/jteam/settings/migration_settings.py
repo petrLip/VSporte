@@ -5,6 +5,7 @@ _required_apps = {
     "account.apps.AccountConfig",
     "games.apps.GamesConfig",
     "actions.apps.ActionsConfig",
+    "notifications.apps.NotificationsConfig",
     "location.apps.LocationConfig",
     "cart.apps.CartConfig",
     "orders.apps.OrdersConfig",
@@ -17,6 +18,7 @@ _required_apps = {
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.postgres",
+    "easy_thumbnails",
 }
 
 INSTALLED_APPS = [app for app in INSTALLED_APPS if app in _required_apps]  # noqa: F405

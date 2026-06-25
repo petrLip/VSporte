@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static thumbnail l10n %}
+{% load static thumbnail l10n game_extras %}
 
 {% block title %}{{ game.get_sport_display }}{% endblock %}
 {% block body_class %} class="page-game-detail"{% endblock %}
@@ -11,8 +11,12 @@
 {% block content %}
 <div class="game-view"
      data-game-id="{{ game.id }}"
+     data-game-status="{{ game.status }}"
+     data-status-url="{% url 'games:status' game.id %}"
      data-max-players="{{ game.max_players }}"
      data-join-url="{% url 'games:join' %}"
+     data-participation-url="{% url 'games:participation' %}"
+     data-invite-url="{% url 'games:invite' %}"
      data-organizer-username="{{ game.user.username }}"
      data-current-username="{% if request.user.is_authenticated %}{{ request.user.username }}{% endif %}">
   <header class="game-view-header">
@@ -43,6 +47,9 @@
     <p class="game-view-datetime">
       {{ game.start_time|date:"H:i" }} - {{ end_time|date:"H:i" }} • {{ game.start_time|date:"j b Y" }}
     </p>
+    <span id="game-header-status" class="game-view-status game-status status-{{ game.status }}">
+      {{ game.status|game_status_label }}
+    </span>
   </header>
 
   <div class="game-view-layout">
@@ -58,6 +65,12 @@
       <section class="game-view-card">
         <h2 class="game-view-card-title">Детали игры</h2>
         <dl class="game-view-details-list">
+          <div class="game-view-details-row">
+            <dt>Статус</dt>
+            <dd>
+              <span id="game-details-status" class="game-status status-{{ game.status }}">{{ game.status|game_status_label }}</span>
+            </dd>
+          </div>
           <div class="game-view-details-row">
             <dt>Уровень игры</dt>
             <dd>Не указан</dd>
@@ -135,6 +148,33 @@
                 <span class="game-view-action-icon"><i class="fas fa-times"></i></span>
                 Выйти
               </button>
+            {% elif has_pending_invitation %}
+              <button type="button"
+                      class="game-view-action game-view-action--invite"
+                      id="join-btn"
+                      data-id="{{ pending_invitation.id }}"
+                      data-action="accept_invitation">
+                <span class="game-view-action-icon"><i class="fas fa-envelope-open"></i></span>
+                Принять приглашение
+              </button>
+              <button type="button"
+                      class="game-view-action danger"
+                      id="decline-invite-btn"
+                      data-id="{{ pending_invitation.id }}"
+                      data-action="decline_invitation">
+                <span class="game-view-action-icon"><i class="fas fa-times"></i></span>
+                Отклонить
+              </button>
+            {% elif has_pending_request %}
+              <button type="button"
+                      class="game-view-action game-view-action--pending"
+                      id="join-btn"
+                      data-id="{{ game.id }}"
+                      data-action="cancel_request"
+                      title="Нажмите, чтобы отменить заявку">
+                <span class="game-view-action-icon"><i class="fas fa-clock"></i></span>
+                Заявка отправлена
+              </button>
             {% else %}
               <button type="button"
                       class="game-view-action"
@@ -152,10 +192,17 @@
             </button>
           {% endif %}
 
-          <button type="button" class="game-view-action" id="game-action-add" disabled>
-            <span class="game-view-action-icon"><i class="fas fa-user-plus"></i></span>
-            Добавить
-          </button>
+          {% if is_organizer and game.status == 'open' %}
+            <button type="button" class="game-view-action" id="game-action-add">
+              <span class="game-view-action-icon"><i class="fas fa-user-plus"></i></span>
+              Добавить
+            </button>
+          {% else %}
+            <button type="button" class="game-view-action" id="game-action-add" disabled>
+              <span class="game-view-action-icon"><i class="fas fa-user-plus"></i></span>
+              Добавить
+            </button>
+          {% endif %}
 
           {% if is_organizer %}
             <button type="button" class="game-view-action" id="game-action-manage">
@@ -197,15 +244,83 @@
           </div>
         </div>
 
-        {% if game.status != 'open' %}
-          <div class="game-view-status-message" style="margin-top: 16px;">
-            {% if game.status == 'started' %}
-              Игра уже началась
-            {% elif game.status == 'finished' %}
-              Игра уже закончилась
-            {% endif %}
+        {% if is_organizer and pending_invitations %}
+          <div class="game-view-requests game-view-invitations" id="pending-invitations-block">
+            <h3 class="game-view-card-title">Отправленные приглашения</h3>
+            <ul class="game-view-requests-list" id="pending-invitations-list">
+              {% for invitation in pending_invitations %}
+                <li class="game-view-request">
+                  <div class="game-view-request-user">
+                    {% if invitation.to_user.profile.photo %}
+                      {% thumbnail invitation.to_user.profile.photo "42x42" crop="100%" as avatar %}
+                      <img src="{{ avatar.url }}" alt="" class="game-view-participant-avatar">
+                    {% else %}
+                      <span class="game-view-participant-avatar placeholder">{{ invitation.to_user.username.0|upper }}</span>
+                    {% endif %}
+                    <a href="{{ invitation.to_user.get_absolute_url }}" class="game-view-participant-name">
+                      {{ invitation.to_user.username }}
+                    </a>
+                  </div>
+                  <div class="game-view-request-actions">
+                    <button type="button"
+                            class="game-view-request-btn reject"
+                            data-invitation-id="{{ invitation.id }}"
+                            data-action="cancel">
+                      Отменить
+                    </button>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
           </div>
         {% endif %}
+
+        {% if is_organizer and pending_participation_requests %}
+          <div class="game-view-requests" id="participation-requests-block">
+            <h3 class="game-view-card-title">Заявки на участие</h3>
+            <ul class="game-view-requests-list" id="participation-requests-list">
+              {% for participation_request in pending_participation_requests %}
+                <li class="game-view-request">
+                  <div class="game-view-request-user">
+                    {% if participation_request.user.profile.photo %}
+                      {% thumbnail participation_request.user.profile.photo "42x42" crop="100%" as avatar %}
+                      <img src="{{ avatar.url }}" alt="" class="game-view-participant-avatar">
+                    {% else %}
+                      <span class="game-view-participant-avatar placeholder">{{ participation_request.user.username.0|upper }}</span>
+                    {% endif %}
+                    <a href="{{ participation_request.user.get_absolute_url }}" class="game-view-participant-name">
+                      {{ participation_request.user.username }}
+                    </a>
+                  </div>
+                  <div class="game-view-request-actions">
+                    <button type="button"
+                            class="game-view-request-btn accept"
+                            data-participation-id="{{ participation_request.id }}"
+                            data-action="accept">
+                      Принять
+                    </button>
+                    <button type="button"
+                            class="game-view-request-btn reject"
+                            data-participation-id="{{ participation_request.id }}"
+                            data-action="reject">
+                      Отклонить
+                    </button>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <div id="game-status-message"
+             class="game-view-status-message"
+             style="margin-top: 16px;{% if game.status == 'open' %} display: none;{% endif %}">
+          {% if game.status == 'started' %}
+            Игра уже началась
+          {% elif game.status == 'finished' %}
+            Игра уже закончилась
+          {% endif %}
+        </div>
       </section>
     </div>
 
@@ -222,6 +337,45 @@
       {% include "games/game/_chat_block.html" %}
     </div>
   </div>
+
+  {% if is_organizer and game.status == 'open' %}
+    <div class="game-view-invite-modal" id="game-invite-modal" hidden>
+      <div class="game-view-invite-backdrop" id="game-invite-backdrop"></div>
+      <div class="game-view-invite-dialog" role="dialog" aria-labelledby="game-invite-title">
+        <div class="game-view-invite-header">
+          <h2 class="game-view-invite-title" id="game-invite-title">Пригласить игрока</h2>
+          <button type="button" class="game-view-invite-close" id="game-invite-close" aria-label="Закрыть">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        {% if invite_friends %}
+          <ul class="game-view-invite-list" id="game-invite-list">
+            {% for friend in invite_friends %}
+              <li class="game-view-invite-item">
+                <div class="game-view-request-user">
+                  {% if friend.profile.photo %}
+                    {% thumbnail friend.profile.photo "42x42" crop="100%" as avatar %}
+                    <img src="{{ avatar.url }}" alt="" class="game-view-participant-avatar">
+                  {% else %}
+                    <span class="game-view-participant-avatar placeholder">{{ friend.username.0|upper }}</span>
+                  {% endif %}
+                  <span class="game-view-participant-name">{{ friend.username }}</span>
+                </div>
+                <button type="button"
+                        class="game-view-request-btn accept"
+                        data-user-id="{{ friend.id }}"
+                        data-action="invite">
+                  Пригласить
+                </button>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="game-view-empty" id="game-invite-empty">Нет друзей для приглашения</p>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
 </div>
 {% endblock %}
 

@@ -1,0 +1,41 @@
+<article class="profile-page__activity-item">
+  <div class="profile-page__activity-icon" aria-hidden="true">
+    {% if action.target_ct.model == "game" %}
+      <i class="fas fa-futbol"></i>
+    {% elif action.verb == "отправил(а) заявку в друзья" or action.verb == "принял(а) заявку в друзья" %}
+      <i class="fas fa-user-plus"></i>
+    {% elif action.verb == "подписался(ась) на" %}
+      <i class="fas fa-user-check"></i>
+    {% else %}
+      <i class="far fa-dot-circle"></i>
+    {% endif %}
+  </div>
+  <div class="profile-page__activity-body">
+    <p class="profile-page__activity-text">
+      {% if is_own_profile %}
+        <span class="profile-page__activity-subject">Вы</span>
+      {% else %}
+        <a href="{% url 'user_detail' action.user.username %}" class="profile-page__activity-subject">
+          {{ action.user.get_full_name|default:action.user.username }}
+        </a>
+      {% endif %}
+      {{ action.verb }}
+      {% if action.target %}
+        {% if action.target_ct.model == "user" %}
+          <a href="{% url 'user_detail' action.target.username %}" class="profile-page__activity-target">
+            @{{ action.target.username }}
+          </a>
+        {% elif action.target_ct.model == "game" %}
+          <a href="{{ action.target.get_absolute_url }}" class="profile-page__activity-target">
+            {{ action.target.get_sport_display|capfirst }}
+          </a>
+        {% else %}
+          <span class="profile-page__activity-target">{{ action.target }}</span>
+        {% endif %}
+      {% endif %}
+    </p>
+    <time class="profile-page__activity-time" datetime="{{ action.created|date:'c' }}">
+      {{ action.created|timesince }} назад
+    </time>
+  </div>
+</article>

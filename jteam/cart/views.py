@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
+from jteam.marketplace import marketplace_required
 from location.recommender import Recommender
 from .cart import Cart
 from .forms import CartAddProductForm
@@ -8,6 +9,7 @@ from location.models import Place
 from coupons.forms import CouponApplyForm
 
 
+@marketplace_required
 @require_POST
 def cart_add(request, place_id):
     cart = Cart(request)
@@ -19,6 +21,7 @@ def cart_add(request, place_id):
     return redirect("cart:cart_detail")
 
 
+@marketplace_required
 @require_POST
 def cart_remove(request, place_id):
     cart = Cart(request)
@@ -27,6 +30,7 @@ def cart_remove(request, place_id):
     return redirect("cart:cart_detail")
 
 
+@marketplace_required
 def cart_detail(request):
     cart = Cart(request)
     for item in cart:

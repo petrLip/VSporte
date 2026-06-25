@@ -1,39 +1,76 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static thumbnail %}
 
-{% block title %}
- {{ place.name }}
+{% block title %}{{ place.name }}{% endblock %}
+{% block body_class %} class="page-places"{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/place-list.css' %}">
 {% endblock %}
+
 {% block content %}
-    <div class="product-detail">
-        <img src="{% if place.image %}{{ place.image.url }}{% else %}
-        {% static 'image/png/no_image.png' %}{% endif %}">
-        <h1>{{ place.name }}</h1>
-        <h2>
-            <a href="{{ place.city.get_absolute_url }}">
-                {{ place.city }}
-            </a>
-        </h2>
-        <p class="price">₽{{ place.price }}</p>
-        <form action="{% url 'cart:cart_add' place.id %}" method="post">
-            {{ cart_place_form }}
-            {% csrf_token %}
-            <input type="submit" value="Add to cart">
-        </form>
-        {{ place.description|linebreaks }}
-        {% if recommended_places %}
-        <div class="recommendations">
-            <h3>People who bought this also bought</h3>
-            {% for p in recommended_places %}
-                <div class="item">
-                    <a href="{{ p.get_absolute_url }}">
-                        <img src="{% if p.image %}{{ p.image.url }}{% else %}
-                        {% static 'image/png/no_image.png' %}{% endif %}">
-                    </a>
-                    <p><a href="{{ p.get_absolute_url }}">{{ p.name }}</a></p>
-                </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+<div class="places-page places-page--detail">
+  <header class="places-page__mobile-header">
+    <a href="{% if place.city %}{% url 'location:place_list_by_city' place.city.slug %}{% else %}{% url 'location:list' %}{% endif %}"
+       class="places-page__header-btn"
+       aria-label="Назад">
+      <i class="fas fa-times" aria-hidden="true"></i>
+    </a>
+    <h1 class="places-page__title">{{ place.name }}</h1>
+    <span class="places-page__header-btn places-page__header-btn--spacer" aria-hidden="true"></span>
+  </header>
+
+  <article class="places-page__detail-card">
+    <div class="places-page__detail-media">
+      {% if place.image %}
+        {% thumbnail place.image "640x360" crop="100%" as hero %}
+        <img src="{{ hero.url }}" alt="{{ place.name }}" class="places-page__detail-image">
+      {% else %}
+        <img src="{% static 'image/png/no_image.png' %}" alt="{{ place.name }}" class="places-page__detail-image">
+      {% endif %}
     </div>
+
+    <div class="places-page__detail-body">
+      <h1 class="places-page__detail-title">{{ place.name }}</h1>
+      <a href="{{ place.city.get_absolute_url }}" class="places-page__detail-city text-decoration-none">
+        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+        {{ place.city.name }}
+      </a>
+      {% if marketplace_enabled %}
+      <p class="places-page__detail-price">₽{{ place.price }}</p>
+
+      <form action="{% url 'cart:cart_add' place.id %}" method="post" class="places-page__cart-form">
+        {{ cart_place_form }}
+        {% csrf_token %}
+        <button type="submit" class="places-page__cart-submit">В корзину</button>
+      </form>
+      {% else %}
+      <div class="places-page__detail-actions">
+        <a href="{{ create_game_url }}"
+           class="places-page__cart-submit places-page__action-link">
+          Создать событие здесь
+        </a>
+        <p class="places-page__detail-hint">Бронирование через JTeam — скоро</p>
+      </div>
+      {% endif %}
+
+      {% if place.description %}
+        <div class="places-page__detail-desc">
+          {{ place.description|linebreaks }}
+        </div>
+      {% endif %}
+    </div>
+  </article>
+
+  {% if recommended_places %}
+    <section class="places-page__recommendations">
+      <h2 class="places-page__recommendations-title">Похожие площадки</h2>
+      <div class="places-page__list">
+        {% for p in recommended_places %}
+          {% include "place/_place_card.html" with place=p %}
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>
 {% endblock %}

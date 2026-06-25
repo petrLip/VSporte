@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Dashboard{% endblock %}
-{% block body_class %} class="page-dashboard"{% endblock %}
+{% block body_class %} class="page-dashboard has-mobile-bottom-nav"{% endblock %}
+
+{% block mobile_bottom_nav %}
+  {% include "includes/mobile_bottom_nav.html" with active="dashboard" %}
+{% endblock %}
 
 {% block content %}
 
@@ -16,9 +20,7 @@
       <span data-city-label>Определяем город...</span>
     </button>
     <div class="dashboard-mobile-header__actions">
-      <button type="button" class="dashboard-mobile-header__icon-btn" aria-label="Уведомления">
-        <i class="far fa-bell"></i>
-      </button>
+      {% include "includes/notification_bell.html" with extra_class="dashboard-mobile-header__icon-btn" %}
       <button type="button"
               class="dashboard-mobile-header__icon-btn"
               id="dashboard-menu-toggle"
@@ -82,20 +84,6 @@
     </a>
   </div>
 
-  <nav class="dashboard-mobile-bottom-nav dashboard-home__bottom-nav" aria-label="Основная навигация">
-    <a href="{% url 'dashboard' %}" class="dashboard-mobile-bottom-nav__item dashboard-mobile-bottom-nav__item--active">
-      <i class="fas fa-home"></i>
-      <span>Главная</span>
-    </a>
-    <a href="{% url 'games:list' %}" class="dashboard-mobile-bottom-nav__item">
-      <i class="fas fa-futbol"></i>
-      <span>Игры</span>
-    </a>
-    <a href="{% url 'user_detail' request.user.username %}" class="dashboard-mobile-bottom-nav__item">
-      <i class="far fa-user"></i>
-      <span>Профиль</span>
-    </a>
-  </nav>
 </div>
 
 {% endblock %}

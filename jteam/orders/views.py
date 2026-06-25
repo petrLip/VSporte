@@ -9,12 +9,14 @@ from django.urls import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 
 from cart.cart import Cart
+from jteam.marketplace import marketplace_required
 
 from .forms import OrderCreateForm
 from .models import OrderItem, Order
 from .tasks import order_created
 
 
+@marketplace_required
 def order_create(request):
     cart = Cart(request)
     if request.method == "POST":

@@ -6,6 +6,14 @@ from django.urls import reverse
 
 
 class Profile(models.Model):
+    GENDER_MALE = "male"
+    GENDER_FEMALE = "female"
+    GENDER_CHOICES = (
+        ("", "Не указан"),
+        (GENDER_MALE, "Мужской"),
+        (GENDER_FEMALE, "Женский"),
+    )
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, related_name="profile", on_delete=models.CASCADE
     )
@@ -15,12 +23,57 @@ class Profile(models.Model):
         blank=True,
         default="default-profile-user.jpg",
     )
+    gender = models.CharField(
+        max_length=10, choices=GENDER_CHOICES, blank=True, default=""
+    )
+    bio = models.TextField(blank=True)
+    show_email = models.BooleanField(default=True)
+    interests = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return f"Profile of {self.user.username}"
 
     def get_absolute_url(self):
         return reverse("user_detail", args=[str(self.id)])
+
+
+class Friendship(models.Model):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    STATUS_CHOICES = (
+        (PENDING, "Pending"),
+        (ACCEPTED, "Accepted"),
+    )
+
+    from_user = models.ForeignKey(
+        "auth.User",
+        related_name="friendships_sent",
+        on_delete=models.CASCADE,
+    )
+    to_user = models.ForeignKey(
+        "auth.User",
+        related_name="friendships_received",
+        on_delete=models.CASCADE,
+    )
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=PENDING
+    )
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["from_user", "to_user"],
+                name="unique_friendship_request",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["-created"]),
+        ]
+        ordering = ["-created"]
+
+    def __str__(self):
+        return f"{self.from_user} -> {self.to_user} ({self.status})"
 
 
 class Contact(models.Model):

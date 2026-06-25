@@ -1,0 +1,481 @@
+/* Places list page */
+body.page-places #content {
+    background: #f3f4f6;
+    padding: 0;
+}
+
+body.page-places ul.messages {
+    max-width: 720px;
+    margin: 10px auto;
+    padding: 0 16px;
+}
+
+.places-page {
+    max-width: 720px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #f3f4f6;
+    padding: 24px 16px 32px;
+}
+
+.places-page__mobile-header {
+    display: none;
+}
+
+.places-page__desktop-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 20px;
+}
+
+.places-page__desktop-subtitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.places-page__toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.places-page__search-form {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.places-page__search-input {
+    flex: 1;
+    box-sizing: border-box;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #222;
+    background: #fff;
+}
+
+.places-page__search-input:focus {
+    outline: none;
+    border-color: #5a7260;
+    box-shadow: 0 0 0 3px rgba(90, 114, 96, 0.15);
+}
+
+.places-page__search-submit,
+.places-page__filter-submit {
+    border: none;
+    background: #5a7260;
+    color: #fff;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.places-page__filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    background: #fff;
+    border-radius: 16px;
+    padding: 12px 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.places-page__filter-label {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+    margin: 0;
+}
+
+.places-page__filter-select {
+    flex: 1;
+    min-width: 160px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #222;
+    background: #f8f9fa;
+    cursor: pointer;
+}
+
+.places-page__city-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.places-page__city-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #fff;
+    color: #555;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+    transition: background 0.15s, color 0.15s;
+}
+
+.places-page__city-tab:hover {
+    color: #12c064;
+}
+
+.places-page__city-tab--active {
+    background: #12c064;
+    color: #fff;
+}
+
+.places-page__city-tab--active:hover {
+    color: #fff;
+}
+
+.places-page__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.places-page__card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s, transform 0.18s;
+}
+
+.places-page__card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+.places-page__card-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    color: inherit;
+}
+
+.places-page__card-link:hover {
+    color: inherit;
+}
+
+.places-page__card-media {
+    flex-shrink: 0;
+}
+
+.places-page__card-image {
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    object-fit: cover;
+    background: #e8e8e8;
+    display: block;
+}
+
+.places-page__card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.places-page__card-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.places-page__card-city {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+    color: #12c064;
+    margin: 0 0 4px;
+}
+
+.places-page__card-desc {
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.places-page__card-price {
+    flex-shrink: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #222;
+    white-space: nowrap;
+}
+
+.places-page__empty {
+    text-align: center;
+    color: #888;
+    padding: 32px 16px;
+    margin: 0;
+}
+
+.places-page--detail {
+    padding-bottom: 32px;
+}
+
+.places-page__header-btn--spacer {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.places-page__detail-card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.places-page__detail-image {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+    background: #e8e8e8;
+}
+
+.places-page__detail-body {
+    padding: 20px 16px 24px;
+}
+
+.places-page__detail-title {
+    display: none;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 8px;
+}
+
+.places-page__detail-city {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+    color: #12c064;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.places-page__detail-price {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 16px;
+}
+
+.places-page__cart-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.places-page__cart-form select {
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    background: #f8f9fa;
+}
+
+.places-page__cart-submit {
+    border: none;
+    background: #12c064;
+    color: #fff;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.places-page__action-link {
+    display: inline-block;
+    text-decoration: none;
+}
+
+.places-page__detail-actions {
+    margin-bottom: 20px;
+}
+
+.places-page__detail-hint {
+    margin: 10px 0 0;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.places-page__detail-desc {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: #444;
+}
+
+.places-page__recommendations {
+    margin-top: 24px;
+}
+
+.places-page__recommendations-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 12px;
+    padding: 0 16px;
+}
+
+@media (min-width: 769px) {
+    .places-page__detail-title {
+        display: block;
+    }
+
+    .places-page__recommendations-title {
+        padding: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    body.page-places #content {
+        padding: 0 0 88px;
+    }
+
+    body.page-places ul.messages {
+        margin: 10px 16px;
+        padding: 0;
+    }
+
+    .places-page {
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    .places-page__mobile-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 12px 16px;
+        background: #f3f4f6;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .places-page__desktop-title {
+        display: none;
+    }
+
+    .places-page__title {
+        flex: 1;
+        text-align: center;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #222;
+        margin: 0;
+    }
+
+    .places-page__header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .places-page__header-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: transparent;
+        color: #444;
+        font-size: 1.15rem;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        text-decoration: none;
+        flex-shrink: 0;
+    }
+
+    .places-page__toolbar {
+        padding: 0 16px 12px;
+        margin-bottom: 0;
+    }
+
+    .places-page__search {
+        display: none;
+    }
+
+    .places-page__search.is-open {
+        display: block;
+    }
+
+    .places-page__filter {
+        display: none;
+    }
+
+    .places-page__filter.is-open {
+        display: block;
+    }
+
+    .places-page__filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .places-page__filter-select {
+        width: 100%;
+    }
+
+    .places-page__city-tabs {
+        display: none;
+    }
+
+    .places-page__list {
+        padding: 0 16px 16px;
+    }
+
+    .places-page--detail {
+        padding: 0 0 24px;
+    }
+
+    .places-page__detail-body {
+        padding: 16px;
+    }
+
+    .places-page__recommendations-title {
+        padding: 0 16px;
+    }
+}
+
+@media (min-width: 769px) {
+    .places-page__filter {
+        display: block !important;
+    }
+
+    .places-page__search {
+        display: block !important;
+    }
+}

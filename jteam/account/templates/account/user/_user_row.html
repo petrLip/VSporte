@@ -1,0 +1,55 @@
+{% load thumbnail %}
+<article class="users-page__card" data-user-id="{{ item.user.id }}">
+  <a href="{% url 'user_detail' item.user.username %}" class="users-page__card-link">
+    {% if item.user.profile.photo %}
+      {% thumbnail item.user.profile.photo "48x48" crop="100%" as avatar %}
+      <img src="{{ avatar.url }}" alt="" class="users-page__avatar">
+    {% else %}
+      <span class="users-page__avatar users-page__avatar--placeholder">
+        {{ item.user.username.0|upper }}
+      </span>
+    {% endif %}
+    <span class="users-page__name">{{ item.user.username }}</span>
+  </a>
+
+  {% if item.friendship != "self" %}
+    <div class="users-page__action" data-friendship-action>
+      {% if item.friendship == "pending_sent" %}
+        {% if in_requests_section %}
+          <button type="button"
+                  class="users-page__friend-btn users-page__friend-btn--cancel"
+                  data-id="{{ item.user.id }}"
+                  data-action="cancel"
+                  aria-label="Отменить заявку">
+            Отменить
+          </button>
+        {% else %}
+          <span class="users-page__pending">
+            В ожидании
+            <i class="far fa-hourglass" aria-hidden="true"></i>
+          </span>
+        {% endif %}
+      {% elif item.friendship == "friends" %}
+        <button type="button"
+                class="users-page__friend-btn users-page__friend-btn--remove"
+                data-id="{{ item.user.id }}"
+                data-action="unfriend"
+                aria-label="Удалить из друзей">
+          <i class="fas fa-user-minus" aria-hidden="true"></i>
+        </button>
+      {% else %}
+        <button type="button"
+                class="users-page__friend-btn users-page__friend-btn--add{% if item.friendship == 'pending_received' and in_requests_section %} users-page__friend-btn--accept{% endif %}"
+                data-id="{{ item.user.id }}"
+                data-action="{% if item.friendship == 'pending_received' %}accept{% else %}request{% endif %}"
+                aria-label="{% if item.friendship == 'pending_received' %}Принять заявку{% else %}Добавить в друзья{% endif %}">
+          {% if item.friendship == "pending_received" and in_requests_section %}
+            Принять
+          {% else %}
+            <i class="fas fa-user-plus" aria-hidden="true"></i>
+          {% endif %}
+        </button>
+      {% endif %}
+    </div>
+  {% endif %}
+</article>

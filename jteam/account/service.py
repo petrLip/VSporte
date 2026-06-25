@@ -1,7 +1,12 @@
 from django.contrib.auth.models import User
 from django.contrib.postgres.search import TrigramSimilarity
-from django.db.models import TextField
+from django.db.models import Q, TextField
 from django.db.models.functions import Cast
+from django.utils import timezone
+
+from games.models import Game
+
+from .models import Friendship
 
 
 def search_users(query):
@@ -25,3 +30,140 @@ def search_users(query):
         .order_by("-similarity")
     )
     return results
+
+
+def get_coplayed_user_ids(user):
+    """Users who participated in the same games as the given user."""
+    game_ids = Game.objects.filter(
+        Q(joined_players=user) | Q(user=user)
+    ).values_list("id", flat=True)
+
+    return set(
+        User.objects.filter(
+            Q(joined_games__id__in=game_ids) | Q(user_games_created__id__in=game_ids)
+        )
+        .exclude(pk=user.pk)
+        .values_list("pk", flat=True)
+    )
+
+
+def get_friendship_status(viewer, other):
+    if viewer.pk == other.pk:
+        return "self"
+
+    if Friendship.objects.filter(
+        Q(from_user=viewer, to_user=other, status=Friendship.ACCEPTED)
+        | Q(from_user=other, to_user=viewer, status=Friendship.ACCEPTED)
+    ).exists():
+        return "friends"
+
+    if Friendship.objects.filter(
+        from_user=viewer, to_user=other, status=Friendship.PENDING
+    ).exists():
+        return "pending_sent"
+
+    if Friendship.objects.filter(
+        from_user=other, to_user=viewer, status=Friendship.PENDING
+    ).exists():
+        return "pending_received"
+
+    return "none"
+
+
+def apply_played_filter(queryset, user, played_filter):
+    coplayed_ids = get_coplayed_user_ids(user)
+    if played_filter == "played":
+        return queryset.filter(pk__in=coplayed_ids)
+    if played_filter == "not_played":
+        return queryset.exclude(pk__in=coplayed_ids)
+    return queryset
+
+
+def get_user_games(user):
+    return Game.objects.filter(Q(joined_players=user) | Q(user=user)).distinct()
+
+
+def get_friend_users(user):
+    friend_ids = set(
+        Friendship.objects.filter(
+            from_user=user, status=Friendship.ACCEPTED
+        ).values_list("to_user_id", flat=True)
+    ) | set(
+        Friendship.objects.filter(
+            to_user=user, status=Friendship.ACCEPTED
+        ).values_list("from_user_id", flat=True)
+    )
+    return (
+        User.objects.filter(pk__in=friend_ids)
+        .select_related("profile")
+        .order_by("username")
+    )
+
+
+def count_playpals(user):
+    return Friendship.objects.filter(
+        Q(from_user=user, status=Friendship.ACCEPTED)
+        | Q(to_user=user, status=Friendship.ACCEPTED)
+    ).count()
+
+
+def count_incoming_friend_requests(user):
+    return Friendship.objects.filter(
+        to_user=user, status=Friendship.PENDING
+    ).count()
+
+
+def get_incoming_friend_requests(user):
+    friendships = (
+        Friendship.objects.filter(to_user=user, status=Friendship.PENDING)
+        .select_related("from_user", "from_user__profile")
+        .order_by("-created")
+    )
+    return [
+        {"user": friendship.from_user, "friendship": "pending_received"}
+        for friendship in friendships
+    ]
+
+
+def get_outgoing_friend_requests(user):
+    friendships = (
+        Friendship.objects.filter(from_user=user, status=Friendship.PENDING)
+        .select_related("to_user", "to_user__profile")
+        .order_by("-created")
+    )
+    return [
+        {"user": friendship.to_user, "friendship": "pending_sent"}
+        for friendship in friendships
+    ]
+
+
+def get_profile_stats(user):
+    games = get_user_games(user)
+    now = timezone.now()
+    last_game = (
+        games.filter(start_time__lte=now).order_by("-start_time").first()
+    )
+    sport_labels = dict(Game.SPORTS)
+
+    if user.profile.interests:
+        interests = [
+            sport_labels.get(sport, sport)
+            for sport in user.profile.interests
+            if sport in sport_labels
+        ]
+    else:
+        sports = (
+            games.values_list("sport", flat=True).distinct().order_by("sport")
+        )
+        interests = [
+            sport_labels.get(sport, sport)
+            for sport in sports
+            if sport in sport_labels
+        ]
+
+    return {
+        "events_count": games.count(),
+        "playpals_count": count_playpals(user),
+        "last_game": last_game,
+        "interests": interests,
+    }

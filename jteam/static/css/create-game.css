@@ -392,6 +392,22 @@ body.page-create-game .create-event {
     color: #d9534f;
 }
 
+.create-event__form-alert {
+    margin: 0 20px 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fdecea;
+    color: #c0392b;
+    font-size: 0.88rem;
+    line-height: 1.4;
+}
+
+.create-event__clock-label--disabled {
+    color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
 .create-event__map-wrap {
     margin-top: 4px;
 }

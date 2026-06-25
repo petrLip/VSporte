@@ -1,90 +1,167 @@
 {% extends "base.html" %}
-{% load thumbnail %}
+{% load static thumbnail %}
 
-{% block title %}{{ user.get_full_name }}{% endblock %}
+{% block title %}Профиль{% endblock %}
+{% block body_class %} class="page-profile{% if is_own_profile %} has-mobile-bottom-nav{% endif %}"{% if not is_own_profile %} data-friendship-url="{% url 'user_friendship' %}"{% endif %}{% endblock %}
 
-{% block content %}
-  <p>Добро пожаловать,
-    {% if user.first_name %}
-    {{ user.first_name }}
-    {% else %}
-    {{ user.username }}
-    {% endif %}
-      , на вашу страницу.</p>
-
-    <p>Вы можете также <a href="{% url 'edit' %}">редактировать свой профиль</a>
-    или <a href="{% url 'password_change' %}"> изменить свой пароль </a>
-  </p>
- <div class="profile-info">
-      <h1>{{ user.get_full_name }}</h1>
-         {% if user.profile.date_of_birth %}
-             <p>{{ user.profile.date_of_birth|date:"j F Y г." }}</p>
-         {% endif %}
-         {% if user.profile.photo %}
-         <img src="{% thumbnail user.profile.photo 180x180 %}" class="user-detail">
-         {% endif %}
- </div>
- {% with total_followers=user.followers.count %}
-    <span class="count">
-        <span class="total">{{ total_followers }}</span>
-        follower{{ total_followers|pluralize }}
-    </span>
-    {% if request.user != user %}
-        <a href="#" data-id="{{ user.id }}"
-           data-action="{% if request.user in user.followers.all %}un{% endif %}follow"
-           class="follow button">
-            {% if request.user not in user.followers.all %}
-                Follow
-            {% else %}
-                Unfollow
-            {% endif %}
-        </a>
-    {% endif %}
-    <div id="game-list" class="image-container">
-        {% include "games/game/list_games.html" with games=user.user_games_created.all %}
-    </div>
- {% endwith %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/user-profile.css' %}">
 {% endblock %}
 
-{% block domready %}
-    const url = '{% url "user_follow" %}';
+{% block mobile_bottom_nav %}
+  {% if is_own_profile %}
+    {% include "includes/mobile_bottom_nav.html" with active="profile" %}
+  {% endif %}
+{% endblock %}
 
-    var options = {
-        method: 'POST',
-        headers: {'X-CSRFToken': csrftoken},
-        mode: 'same-origin'
-    }
-    document.querySelector('a.follow')
-            .addEventListener('click', function(e){
-        // отменяем стандартное поведение ссылки
-        e.preventDefault();
-        var followButton = this;
+{% block content %}
+<div class="profile-page">
+  <header class="profile-page__header">
+    <h1 class="profile-page__title">Профиль</h1>
+    {% if is_own_profile %}
+      <a href="{% url 'edit' %}" class="profile-page__edit-btn" aria-label="Редактировать профиль">
+        <i class="fas fa-pencil-alt" aria-hidden="true"></i>
+      </a>
+    {% endif %}
+  </header>
 
-        // добавить тело запроса
-        var formData = new FormData();
-        formData.append('id', followButton.dataset.id);
-        formData.append('action', followButton.dataset.action);
-        options['body'] = formData;
+  <section class="profile-page__card profile-page__summary">
+    <div class="profile-page__summary-top">
+      {% if user.profile.photo %}
+        {% thumbnail user.profile.photo "144x144" crop="100%" as avatar %}
+        <img src="{{ avatar.url }}" alt="" class="profile-page__avatar">
+      {% else %}
+        <span class="profile-page__avatar profile-page__avatar--placeholder">
+          {{ user.username.0|upper }}
+        </span>
+      {% endif %}
 
-        // отправить HTTP-запрос
-        fetch(url, options)
-        .then(response => response.json())
-        .then(data => {
-            if (data['status'] === 'ok')
-            {
-              var previousAction = followButton.dataset.action;
+      <div class="profile-page__stats">
+        <div class="profile-page__stat">
+          <span class="profile-page__stat-value">{{ profile_stats.events_count }}</span>
+          <span class="profile-page__stat-label">Мероприятий</span>
+        </div>
+        <div class="profile-page__stat">
+          <span class="profile-page__stat-value">{{ profile_stats.playpals_count }}</span>
+          <span class="profile-page__stat-label">Playpals</span>
+        </div>
+      </div>
+    </div>
 
-              // переключить текст кнопки и data-action
-              var action = previousAction === 'follow' ? 'unfollow' : 'follow';
-              followButton.dataset.action = action;
-              followButton.innerHTML = action;
+    <span class="profile-page__username">@{{ user.username }}</span>
 
-              //обновить количество подписчиков
-              var followerCount = document.querySelector('span.count .total');
-              var totalFollowers = parseInt(followerCount.innerHTML);
-              followerCount.innerHTML = previousAction === 'follow' ? totalFollowers + 1 :
-totalFollowers - 1;
-            }
-        })
-    });
+    <div class="profile-page__name-row">
+      <p class="profile-page__fullname">{{ user.get_full_name|default:user.username }}</p>
+      {% if is_own_profile %}
+        <span class="profile-page__location">
+          <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+          <span data-city-label></span>
+        </span>
+      {% endif %}
+    </div>
+
+    {% if profile_stats.last_game %}
+      <p class="profile-page__last-game">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        Последняя игра: {{ profile_stats.last_game.start_time|date:"F j" }}
+      </p>
+    {% endif %}
+  </section>
+
+  <section class="profile-page__card profile-page__interests">
+    <h2 class="profile-page__card-title">Интересы</h2>
+    {% if profile_stats.interests %}
+      <div class="profile-page__tags">
+        {% for interest in profile_stats.interests %}
+          <span class="profile-page__tag">{{ interest|capfirst }}</span>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="profile-page__empty-text">Интересы пока не указаны</p>
+    {% endif %}
+  </section>
+
+  <section class="profile-page__card profile-page__personal">
+    <h2 class="profile-page__card-title">Личная информация</h2>
+
+    <div class="profile-page__info-row">
+      <span class="profile-page__info-label">Адрес e-mail</span>
+      <span class="profile-page__info-value">
+        {% if is_own_profile or user.profile.show_email %}
+          {{ user.email|default:"—" }}
+        {% else %}
+          —
+        {% endif %}
+      </span>
+    </div>
+
+    <div class="profile-page__info-row">
+      <span class="profile-page__info-label">Пол</span>
+      <span class="profile-page__info-value">
+        {% if user.profile.gender %}
+          {{ user.profile.get_gender_display }}
+        {% else %}
+          —
+        {% endif %}
+      </span>
+    </div>
+
+    <div class="profile-page__bio">
+      <span class="profile-page__bio-label">Обо мне</span>
+      {% if user.profile.bio %}
+        <p class="profile-page__bio-text">{{ user.profile.bio }}</p>
+      {% else %}
+        <p class="profile-page__empty-text">Пока ничего не написано</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="profile-page__card profile-page__activity">
+    <h2 class="profile-page__card-title">Активность</h2>
+    {% if activity_items %}
+      <div class="profile-page__activity-list">
+        {% for action in activity_items %}
+          {% include "account/user/_activity_item.html" %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="profile-page__empty-text">Пока нет активности</p>
+    {% endif %}
+  </section>
+
+  {% if not is_own_profile %}
+    <div class="profile-page__actions" data-friendship-action data-user-id="{{ user.id }}">
+      {% if friendship == "pending_sent" %}
+        <span class="profile-page__pending">Заявка отправлена</span>
+      {% elif friendship == "friends" %}
+        <button type="button"
+                class="profile-page__friend-btn profile-page__friend-btn--remove"
+                data-id="{{ user.id }}"
+                data-action="unfriend">
+          Удалить из друзей
+        </button>
+      {% elif friendship == "pending_received" %}
+        <button type="button"
+                class="profile-page__friend-btn"
+                data-id="{{ user.id }}"
+                data-action="accept">
+          Принять заявку
+        </button>
+      {% else %}
+        <button type="button"
+                class="profile-page__friend-btn"
+                data-id="{{ user.id }}"
+                data-action="request">
+          Добавить в друзья
+        </button>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+  {% if not is_own_profile %}
+    <script src="{% static 'js/user-profile.js' %}"></script>
+  {% endif %}
 {% endblock %}

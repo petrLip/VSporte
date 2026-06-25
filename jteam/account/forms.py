@@ -1,5 +1,8 @@
 from django import forms
 from django.contrib.auth.models import User
+
+from games.models import Game
+
 from .models import Profile
 
 
@@ -33,6 +36,17 @@ class UserEditForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ["first_name", "last_name", "email"]
+        widgets = {
+            "first_name": forms.TextInput(
+                attrs={"class": "profile-edit__input", "autocomplete": "given-name"}
+            ),
+            "last_name": forms.TextInput(
+                attrs={"class": "profile-edit__input", "autocomplete": "family-name"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": "profile-edit__input", "autocomplete": "email"}
+            ),
+        }
 
     def clean_email(self):
         data = self.cleaned_data["email"]
@@ -43,9 +57,48 @@ class UserEditForm(forms.ModelForm):
 
 
 class ProfileEditForm(forms.ModelForm):
+    interests = forms.MultipleChoiceField(
+        choices=Game.SPORTS,
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        label="",
+    )
+
     class Meta:
         model = Profile
-        fields = ["date_of_birth", "photo"]
+        fields = ["photo", "gender", "bio", "show_email"]
+        widgets = {
+            "photo": forms.FileInput(
+                attrs={
+                    "class": "profile-edit__photo-input",
+                    "accept": "image/*",
+                    "id": "profile-photo-input",
+                }
+            ),
+            "gender": forms.Select(attrs={"class": "profile-edit__gender-select"}),
+            "bio": forms.Textarea(
+                attrs={
+                    "class": "profile-edit__textarea",
+                    "rows": 4,
+                    "placeholder": "Расскажите о себе",
+                }
+            ),
+            "show_email": forms.CheckboxInput(
+                attrs={"class": "profile-edit__toggle-input"}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields["interests"].initial = self.instance.interests or []
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        profile.interests = self.cleaned_data.get("interests", [])
+        if commit:
+            profile.save()
+        return profile
 
 
 # возможность вводить поисковые запросы

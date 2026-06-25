@@ -1,12 +1,139 @@
 {% extends "base.html" %}
-{% block title %}Edit your account{% endblock %}
+{% load static thumbnail %}
+
+{% block title %}Изменить{% endblock %}
+{% block body_class %} class="page-profile-edit"{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/profile-edit.css' %}">
+{% endblock %}
+
 {% block content %}
- <h1>Отредактируйте свой профиль</h1>
- <p>для изменения данных профиля используй следующую форму:</p>
- <form method="post" enctype="multipart/form-data">
-     {{ user_form.as_p }}
-     {{ profile_form.as_p }}
-     {% csrf_token %}
-     <p><input type="submit" value="Save changes"></p>
- </form>
+<div class="profile-edit">
+  <form method="post" enctype="multipart/form-data" id="profile-edit-form" class="profile-edit__form">
+    {% csrf_token %}
+
+    <header class="profile-edit__header">
+      <a href="{% url 'user_detail' request.user.username %}"
+         class="profile-edit__back"
+         aria-label="Назад">
+        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+      </a>
+      <h1 class="profile-edit__title">Изменить</h1>
+      <button type="submit" class="profile-edit__save">Сохранить</button>
+    </header>
+
+    {% if user_form.errors or profile_form.errors %}
+      <ul class="profile-edit__errors">
+        {% for field in user_form %}
+          {% for error in field.errors %}
+            <li>{{ field.label }}: {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for field in profile_form %}
+          {% for error in field.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in user_form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+        {% for error in profile_form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <div class="profile-edit__photo-section">
+      {% if request.user.profile.photo %}
+        {% thumbnail request.user.profile.photo "240x240" crop="100%" as avatar %}
+        <img src="{{ avatar.url }}"
+             alt=""
+             class="profile-edit__avatar"
+             id="profile-photo-preview">
+      {% else %}
+        <span class="profile-edit__avatar profile-edit__avatar--placeholder"
+              id="profile-photo-preview">
+          {{ request.user.username.0|upper }}
+        </span>
+      {% endif %}
+      <button type="button" class="profile-edit__photo-btn" id="profile-photo-btn">
+        Редактировать
+      </button>
+      {{ profile_form.photo }}
+    </div>
+
+    <div class="profile-edit__fields">
+      <div class="profile-edit__field profile-edit__field--readonly">
+        <span class="profile-edit__label">Имя пользователя</span>
+        <span class="profile-edit__value">{{ request.user.username }}</span>
+      </div>
+
+      <div class="profile-edit__field">
+        <label class="profile-edit__label" for="{{ user_form.first_name.id_for_label }}">Имя</label>
+        {{ user_form.first_name }}
+      </div>
+
+      <div class="profile-edit__field">
+        <label class="profile-edit__label" for="{{ user_form.last_name.id_for_label }}">Фамилия</label>
+        {{ user_form.last_name }}
+      </div>
+    </div>
+
+    <h2 class="profile-edit__section-title">Интересы</h2>
+    <div class="profile-edit__interests">
+      {% for checkbox in profile_form.interests %}
+        <label class="profile-edit__interest-option">
+          {{ checkbox.tag }}
+          <span class="profile-edit__interest-tag">{{ checkbox.choice_label|capfirst }}</span>
+        </label>
+      {% endfor %}
+    </div>
+
+    <h2 class="profile-edit__section-title">Контактные данные</h2>
+    <div class="profile-edit__fields">
+      <div class="profile-edit__field">
+        <label class="profile-edit__label" for="{{ user_form.email.id_for_label }}">Email</label>
+        {{ user_form.email }}
+      </div>
+
+      <div class="profile-edit__field profile-edit__field--toggle">
+        <p class="profile-edit__toggle-label">Показывать email другим пользователям</p>
+        <label class="profile-edit__toggle">
+          {{ profile_form.show_email }}
+          <span class="profile-edit__toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <h2 class="profile-edit__section-title">Личная информация</h2>
+    <div class="profile-edit__fields">
+      <div class="profile-edit__field profile-edit__field--gender">
+        <div class="profile-edit__gender-main">
+          <span class="profile-edit__label">Пол</span>
+          <span class="profile-edit__gender-value" id="profile-gender-value">
+            {% if request.user.profile.gender %}
+              {{ request.user.profile.get_gender_display }}
+            {% else %}
+              Не указан
+            {% endif %}
+          </span>
+          {{ profile_form.gender }}
+        </div>
+        <button type="button" class="profile-edit__gender-select-btn" id="profile-gender-btn">
+          Выбрать
+        </button>
+      </div>
+
+      <div class="profile-edit__field">
+        <label class="profile-edit__label" for="{{ profile_form.bio.id_for_label }}">Обо мне</label>
+        {{ profile_form.bio }}
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/profile-edit.js' %}"></script>
 {% endblock %}

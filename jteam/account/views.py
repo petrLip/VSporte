@@ -12,12 +12,22 @@ from .forms import (
     ProfileEditForm,
     SearchForm,
 )
-from .models import Profile, Contact
-from actions.utils import create_action
+from .models import Profile, Contact, Friendship
+from actions.utils import create_action, get_user_activity
 from actions.models import Action
 from games.models import Game
+from notifications.models import Notification
+from notifications.services import create_notification
 from django.utils import timezone
-from .service import search_users
+from django.db.models import Q
+from .service import (
+    search_users,
+    apply_played_filter,
+    get_friendship_status,
+    get_profile_stats,
+    get_incoming_friend_requests,
+    get_outgoing_friend_requests,
+)
 
 
 def user_login(request):
@@ -111,34 +121,167 @@ def edit(request):
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_form.save()
-            messages.success(request, "Profile updated ", "successfully")
-        else:
-            messages.error(request, "Error updating your profile")
+            messages.success(request, "Профиль успешно обновлён")
+            return redirect("user_detail", username=request.user.username)
+        messages.error(request, "Ошибка при обновлении профиля")
     else:
         user_form = UserEditForm(instance=request.user)
         profile_form = ProfileEditForm(instance=request.user.profile)
     return render(
         request,
         "account/edit.html",
-        {"user_form": user_form, "profile_form": profile_form},
+        {
+            "user_form": user_form,
+            "profile_form": profile_form,
+            "gender_choices": Profile.GENDER_CHOICES,
+        },
     )
 
 
 @login_required
 def user_list(request):
-    users = User.objects.filter(is_active=True)
+    users = (
+        User.objects.filter(is_active=True)
+        .exclude(pk=request.user.pk)
+        .select_related("profile")
+        .order_by("username")
+    )
+
+    played_filter = request.GET.get("played", "all")
+    if played_filter not in ("all", "played", "not_played"):
+        played_filter = "all"
+
+    requests_filter = request.GET.get("requests", "incoming")
+    if requests_filter not in ("incoming", "outgoing"):
+        requests_filter = "incoming"
+
+    incoming_requests = get_incoming_friend_requests(request.user)
+    outgoing_requests = get_outgoing_friend_requests(request.user)
+    request_items = (
+        incoming_requests if requests_filter == "incoming" else outgoing_requests
+    )
+
+    users = apply_played_filter(users, request.user, played_filter)
+
+    query = None
+    form = SearchForm()
+    if "query" in request.GET:
+        form = SearchForm(request.GET)
+        if form.is_valid():
+            query = form.cleaned_data["query"]
+            if query:
+                user_ids = search_users(query).values_list("pk", flat=True)
+                users = users.filter(pk__in=user_ids)
+
+    user_items = [
+        {
+            "user": user,
+            "friendship": get_friendship_status(request.user, user),
+        }
+        for user in users
+    ]
+
     return render(
         request,
         "account/user/list.html",
-        {"section": "people", "users": users, "form": SearchForm()},
+        {
+            "section": "people",
+            "user_items": user_items,
+            "form": form,
+            "query": query,
+            "played_filter": played_filter,
+            "requests_filter": requests_filter,
+            "request_items": request_items,
+            "incoming_count": len(incoming_requests),
+            "outgoing_count": len(outgoing_requests),
+        },
     )
 
 
 @login_required
 def user_detail(request, username):
-    user = get_object_or_404(User, username=username, is_active=True)
-    return render(
-        request, "account/user/detail.html", {"section": "people", "user": user}
+    user = get_object_or_404(
+        User.objects.select_related("profile"), username=username, is_active=True
+    )
+    is_own_profile = request.user == user
+    profile_stats = get_profile_stats(user)
+    context = {
+        "section": "people",
+        "user": user,
+        "is_own_profile": is_own_profile,
+        "profile_stats": profile_stats,
+        "activity_items": get_user_activity(user),
+    }
+    if not is_own_profile:
+        context["friendship"] = get_friendship_status(request.user, user)
+    return render(request, "account/user/detail.html", context)
+
+
+@require_POST
+@login_required
+def user_friendship(request):
+    user_id = request.POST.get("id")
+    action = request.POST.get("action")
+    if not user_id or not action:
+        return JsonResponse({"status": "error"})
+
+    try:
+        other = User.objects.get(id=user_id, is_active=True)
+    except User.DoesNotExist:
+        return JsonResponse({"status": "error"})
+
+    if other == request.user:
+        return JsonResponse({"status": "error"})
+
+    if action == "request":
+        friendship, created = Friendship.objects.get_or_create(
+            from_user=request.user,
+            to_user=other,
+            defaults={"status": Friendship.PENDING},
+        )
+        create_action(request.user, "отправил(а) заявку в друзья", other)
+        if created:
+            create_notification(
+                other,
+                request.user,
+                Notification.TYPE_FRIENDSHIP_REQUEST,
+                friendship,
+            )
+    elif action == "accept":
+        friendship = Friendship.objects.filter(
+            from_user=other,
+            to_user=request.user,
+            status=Friendship.PENDING,
+        ).first()
+        if friendship:
+            friendship.status = Friendship.ACCEPTED
+            friendship.save(update_fields=["status"])
+            create_action(request.user, "принял(а) заявку в друзья", other)
+            create_notification(
+                other,
+                request.user,
+                Notification.TYPE_FRIENDSHIP_ACCEPTED,
+                friendship,
+            )
+    elif action == "cancel":
+        Friendship.objects.filter(
+            from_user=request.user,
+            to_user=other,
+            status=Friendship.PENDING,
+        ).delete()
+    elif action == "unfriend":
+        Friendship.objects.filter(
+            Q(from_user=request.user, to_user=other, status=Friendship.ACCEPTED)
+            | Q(from_user=other, to_user=request.user, status=Friendship.ACCEPTED)
+        ).delete()
+    else:
+        return JsonResponse({"status": "error"})
+
+    return JsonResponse(
+        {
+            "status": "ok",
+            "friendship": get_friendship_status(request.user, other),
+        }
     )
 
 

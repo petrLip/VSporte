@@ -1,0 +1,26 @@
+{% load static thumbnail %}
+<article class="places-page__card">
+  <a href="{{ place.get_absolute_url }}" class="places-page__card-link text-decoration-none">
+    <div class="places-page__card-media">
+      {% if place.image %}
+        {% thumbnail place.image "96x96" crop="100%" as thumb %}
+        <img src="{{ thumb.url }}" alt="" class="places-page__card-image">
+      {% else %}
+        <img src="{% static 'image/png/no_image.png' %}" alt="" class="places-page__card-image">
+      {% endif %}
+    </div>
+    <div class="places-page__card-body">
+      <h2 class="places-page__card-name">{{ place.name }}</h2>
+      <p class="places-page__card-city">
+        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+        {{ place.city.name }}
+      </p>
+      {% if place.description %}
+        <p class="places-page__card-desc">{{ place.description|truncatewords:12 }}</p>
+      {% endif %}
+    </div>
+    {% if marketplace_enabled %}
+    <span class="places-page__card-price">₽{{ place.price }}</span>
+    {% endif %}
+  </a>
+</article>

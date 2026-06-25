@@ -1,8 +1,9 @@
 from decimal import Decimal
 import stripe
 from django.conf import settings
-from django.shortcuts import render, redirect, reverse, reverse, get_object_or_404
+from django.shortcuts import render, redirect, reverse, get_object_or_404
 
+from jteam.marketplace import marketplace_required
 from orders.models import Order
 
 # создать экземпляр Stripe
@@ -10,6 +11,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 stripe.api_version = settings.STRIPE_API_VERSION
 
 
+@marketplace_required
 def payment_process(request):
     order_id = request.session.get("order_id", None)
     order = get_object_or_404(Order, id=order_id)
@@ -58,9 +60,11 @@ def payment_process(request):
         return render(request, "payment/process.html", locals())
 
 
+@marketplace_required
 def payment_completed(request):
     return render(request, "payment/completed.html")
 
 
+@marketplace_required
 def payment_canceled(request):
     return render(request, "payment/canceled.html")

@@ -136,3 +136,18 @@ class GameStatusUpdateTest(TestCase):
         
         self.assertEqual(game_now.status, 'started')
         self.assertEqual(game_zero_duration.status, 'finished')
+
+    def test_game_sync_status_method(self):
+        """Синхронизация статуса отдельной игры без Celery."""
+        past_game = Game.objects.create(
+            user=self.user,
+            sport='football',
+            place='Test Place 7',
+            start_time=timezone.now() - timedelta(hours=2),
+            duration=timedelta(minutes=30),
+            price=100,
+            max_players=10,
+            status='open',
+        )
+        past_game.sync_status()
+        self.assertEqual(past_game.status, 'finished')

@@ -2,6 +2,7 @@ from django import forms
 from django.forms import Select, NumberInput, Textarea, ClearableFileInput
 from django.utils import timezone
 from datetime import datetime, timedelta
+from decimal import Decimal, ROUND_HALF_UP
 from django.core.exceptions import ValidationError
 
 from .models import Game
@@ -69,7 +70,7 @@ class GameCreateForm(forms.ModelForm):
             "sport": "Вид спорта",
             "place": "Площадка",
             "max_players": "Количество игроков",
-            "price": "Стоимость участия",
+            "price": "Полная стоимость",
             "description": "Описание",
             "image": "Обложка",
         }
@@ -116,7 +117,8 @@ class GameCreateForm(forms.ModelForm):
                 # Добавляем информацию о временной зоне
                 dt = timezone.make_aware(dt)
                 # Проверяем, что дата в будущем
-                if dt <= timezone.now():
+                now = timezone.localtime(timezone.now())
+                if dt <= now:
                     raise forms.ValidationError("Время начала игры должно быть в будущем")
                 return dt
             except ValueError:
@@ -141,6 +143,18 @@ class GameCreateForm(forms.ModelForm):
             except ValueError:
                 raise ValidationError("Укажите продолжительность в часах")
         return duration
+
+    def clean(self):
+        cleaned_data = super().clean()
+        total_price = cleaned_data.get('price')
+        max_players = cleaned_data.get('max_players')
+
+        if total_price is not None and max_players:
+            cleaned_data['price'] = (
+                Decimal(total_price) / Decimal(max_players)
+            ).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        return cleaned_data
 
 
 class GameFilterForm(forms.Form):

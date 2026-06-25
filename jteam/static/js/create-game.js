@@ -78,6 +78,75 @@ document.addEventListener('DOMContentLoaded', function () {
         return iso < todayISO();
     }
 
+    function isToday(iso) {
+        return iso === todayISO();
+    }
+
+    function buildLocalDateTime(iso, time) {
+        var dateParts = iso.split('-');
+        var timeParts = time.split(':');
+        return new Date(
+            Number(dateParts[0]),
+            Number(dateParts[1]) - 1,
+            Number(dateParts[2]),
+            Number(timeParts[0]),
+            Number(timeParts[1]),
+            0,
+            0
+        );
+    }
+
+    function isPastDateTime(iso, time) {
+        if (!iso || !time) {
+            return false;
+        }
+        var selected = buildLocalDateTime(iso, time);
+        var now = new Date();
+        now.setSeconds(0, 0);
+        return selected <= now;
+    }
+
+    function isHourInPast(hour, iso) {
+        var dateIso = iso || selectedDate;
+        if (!dateIso || !isToday(dateIso)) {
+            return false;
+        }
+        return hour < new Date().getHours();
+    }
+
+    function isMinuteInPast(hour, minute, iso) {
+        var dateIso = iso || selectedDate;
+        if (!dateIso || !isToday(dateIso)) {
+            return false;
+        }
+        var now = new Date();
+        if (hour > now.getHours()) {
+            return false;
+        }
+        if (hour < now.getHours()) {
+            return true;
+        }
+        return minute <= now.getMinutes();
+    }
+
+    function getDefaultPickerTimeForDate(iso) {
+        if (!iso || !isToday(iso)) {
+            return { hour: 12, minute: 0 };
+        }
+        var now = new Date();
+        var hour = now.getHours();
+        var minute = Math.ceil((now.getMinutes() + 1) / 5) * 5;
+        if (minute >= 60) {
+            hour += 1;
+            minute = 0;
+        }
+        if (hour >= 24) {
+            hour = 23;
+            minute = 55;
+        }
+        return { hour: hour, minute: minute };
+    }
+
     function isMonthInPast(year, month) {
         var now = new Date();
         return year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth());
@@ -156,6 +225,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (options && options.selected) {
             button.classList.add('create-event__clock-label--selected');
         }
+        if (options && options.disabled) {
+            button.disabled = true;
+            button.classList.add('create-event__clock-label--disabled');
+            container.appendChild(button);
+            return button;
+        }
 
         button.addEventListener('click', options.onSelect);
         container.appendChild(button);
@@ -215,6 +290,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var outerPos = polarToPercent(valueToClockAngle(hour % 12, 12), radiusOuter);
             placeClockLabel(timeLabels, String(hour), outerPos.x, outerPos.y, {
                 selected: pickerHour === hour,
+                disabled: isHourInPast(hour),
                 onSelect: function (event) {
                     pickerHour = Number(event.currentTarget.textContent);
                     timePickerMode = 'minute';
@@ -228,6 +304,7 @@ document.addEventListener('DOMContentLoaded', function () {
             placeClockLabel(timeLabels, String(innerHour), innerPos.x, innerPos.y, {
                 inner: true,
                 selected: pickerHour === innerHour,
+                disabled: isHourInPast(innerHour),
                 onSelect: function (event) {
                     pickerHour = Number(event.currentTarget.textContent);
                     timePickerMode = 'minute';
@@ -240,6 +317,7 @@ document.addEventListener('DOMContentLoaded', function () {
         placeClockLabel(timeLabels, '0', zeroPos.x, zeroPos.y, {
             inner: true,
             selected: pickerHour === 0,
+            disabled: isHourInPast(0),
             onSelect: function () {
                 pickerHour = 0;
                 timePickerMode = 'minute';
@@ -263,6 +341,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var pos = polarToPercent(valueToClockAngle(minute, 60), radius);
             placeClockLabel(timeLabels, label, pos.x, pos.y, {
                 selected: pickerMinute === minute,
+                disabled: isMinuteInPast(pickerHour, minute),
                 onSelect: function (event) {
                     pickerMinute = Number(event.currentTarget.textContent);
                     renderTimePicker();
@@ -288,8 +367,14 @@ document.addEventListener('DOMContentLoaded', function () {
             pickerHour = Number(timeParts[0]) || 0;
             pickerMinute = Number(timeParts[1]) || 0;
         } else {
-            pickerHour = 0;
-            pickerMinute = 0;
+            var defaults = getDefaultPickerTimeForDate(selectedDate);
+            pickerHour = defaults.hour;
+            pickerMinute = defaults.minute;
+        }
+        if (selectedDate && isPastDateTime(selectedDate, formatPickerTime())) {
+            var corrected = getDefaultPickerTimeForDate(selectedDate);
+            pickerHour = corrected.hour;
+            pickerMinute = corrected.minute;
         }
         timePickerMode = 'hour';
         renderTimePicker();
@@ -592,6 +677,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('Укажите время начала');
                 return false;
             }
+            if (isPastDateTime(selectedDate, selectedTime)) {
+                alert('Время начала игры должно быть в будущем');
+                return false;
+            }
             if (!durationInput || !durationInput.value || getDurationHours() <= 0) {
                 alert('Укажите продолжительность');
                 return false;
@@ -676,6 +765,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             selectedDate = pickerDate;
+            if (selectedTime && isPastDateTime(selectedDate, selectedTime)) {
+                selectedTime = null;
+            }
             updateDateTimeLabels();
             updateStartTimeValue();
             closeSheet(dateSheet);
@@ -747,7 +839,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (timeConfirm) {
         timeConfirm.addEventListener('click', function () {
-            selectedTime = formatPickerTime();
+            var pickedTime = formatPickerTime();
+            if (selectedDate && isPastDateTime(selectedDate, pickedTime)) {
+                alert('Время начала игры должно быть в будущем');
+                return;
+            }
+            selectedTime = pickedTime;
             updateDateTimeLabels();
             updateStartTimeValue();
             closeSheet(timeSheet);
@@ -843,5 +940,14 @@ document.addEventListener('DOMContentLoaded', function () {
     updateDateTimeLabels();
     updateDurationLabel();
     updatePricePerPlayer();
-    setStep(1);
+
+    var initialStep = Number(root.dataset.initialStep) || 1;
+    setStep(initialStep);
+
+    if (root.dataset.hasErrors) {
+        var errorEl = root.querySelector('.create-event__field-error, .create-event__form-alert');
+        if (errorEl) {
+            errorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
 });

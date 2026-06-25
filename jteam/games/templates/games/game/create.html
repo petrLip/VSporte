@@ -9,7 +9,11 @@
 {% endblock %}
 
 {% block content %}
-<div class="create-event" data-create-game data-geocode-url="{% url 'location:api_geocode' %}" data-suggest-url="{% url 'location:api_suggest' %}">
+<div class="create-event" data-create-game data-geocode-url="{% url 'location:api_geocode' %}" data-suggest-url="{% url 'location:api_suggest' %}"
+     {% if form.errors %}
+     data-has-errors="1"
+     data-initial-step="{% if form.start_time.errors or form.duration.errors %}2{% elif form.sport.errors or form.max_players.errors or form.place.errors %}1{% else %}3{% endif %}"
+     {% endif %}>
     <div class="create-event__shell">
         <header class="create-event__header">
             <a href="{% url 'games:list' %}" class="create-event__back" aria-label="Назад">
@@ -18,6 +22,12 @@
             <h1 class="create-event__title">Создать мероприятие</h1>
             <a href="{% url 'games:list' %}" class="create-event__cancel">Отмена</a>
         </header>
+
+        {% if form.errors %}
+            <div class="create-event__form-alert" role="alert">
+                Не удалось создать мероприятие. Проверьте поля с ошибками.
+            </div>
+        {% endif %}
 
         <nav class="create-event__tabs" aria-label="Шаги создания мероприятия">
             <button type="button"

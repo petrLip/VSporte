@@ -1,10 +1,12 @@
 import json
 import logging
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from .city_detection import (
@@ -15,7 +17,6 @@ from .city_detection import (
 )
 from .suggest import fetch_address_suggestions
 from .models import City, Place
-from cart.forms import CartAddProductForm
 from .recommender import Recommender
 
 logger = logging.getLogger(__name__)
@@ -24,28 +25,55 @@ logger = logging.getLogger(__name__)
 def place_list(request, city_slug=None):
     city = None
     city_list = City.objects.all()
-    places = Place.objects.filter(available=True)
-    if city_slug:
-        city = get_object_or_404(City, slug=city_slug)
+    places = Place.objects.filter(available=True).select_related("city")
+
+    slug = city_slug or request.GET.get("city")
+    if slug:
+        city = get_object_or_404(City, slug=slug)
         places = places.filter(city=city)
+
+    query = (request.GET.get("q") or "").strip()
+    if query:
+        places = places.filter(name__icontains=query)
+
+    places = places.order_by("name")
+
     return render(
-        request, "place/list.html", {"city": city, "city_list": city_list, "places": places}
+        request,
+        "place/list.html",
+        {
+            "section": "location",
+            "city": city,
+            "city_list": city_list,
+            "places": places,
+            "query": query,
+        },
     )
 
 
 def place_detail(request, id, slug):
     place = get_object_or_404(Place, id=id, slug=slug, available=True)
-    cart_place_form = CartAddProductForm()
+    context = {
+        "section": "location",
+        "place": place,
+    }
+    if settings.MARKETPLACE_ENABLED:
+        from cart.forms import CartAddProductForm
+
+        context["cart_place_form"] = CartAddProductForm()
+    else:
+        context["create_game_url"] = (
+            reverse("games:create")
+            + "?"
+            + urlencode({"place": f"{place.name}, {place.city.name}"})
+        )
     r = Recommender()
     recommended_places = r.suggest_places_for([place], 4)
+    context["recommended_places"] = recommended_places
     return render(
         request,
         "place/detail.html",
-        {
-            "place": place,
-            "cart_place_form": cart_place_form,
-            "recommended_places": recommended_places,
-        },
+        context,
     )
 
 
